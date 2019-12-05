@@ -8,5 +8,6 @@
 **/tmp/**
 # TODO: decide whether or not to bring these up to eslint standards
 products/jbrowse-web/scripts/**
+packages/jbrowse-desktop/public/electron.js
 /config/
 /products/jbrowse-web/config/
