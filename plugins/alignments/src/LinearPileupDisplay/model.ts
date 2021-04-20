@@ -245,7 +245,6 @@ const stateModelFactory = (
       // uses copy-to-clipboard and generates notification
       copyFeatureToClipboard(feature: Feature) {
         const copiedFeature = feature.toJSON()
-        delete copiedFeature.uniqueId
         const session = getSession(self)
         copy(JSON.stringify(copiedFeature, null, 4))
         session.notify('Copied to clipboard', 'success')

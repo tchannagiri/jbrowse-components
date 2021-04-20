@@ -34,6 +34,7 @@ export default class PluginLoader {
   }
 
   loadScript(scriptUrl: string): Promise<void> {
+    // @ts-ignore
     if (document && document.getElementsByTagName) {
       return domLoadScript(scriptUrl)
     }

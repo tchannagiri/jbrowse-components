@@ -54,9 +54,7 @@ export const UriLocationRaw = types.model('UriLocation', {
 
 export const UriLocation = types.snapshotProcessor(UriLocationRaw, {
   postProcessor: snap => {
-    // this has to be type `any` otherwise get error
-    // Exported variable 'libs' has or is using name '$nonEmptyObject' from external module "/home/cdiesh/src/jbrowse-components/node_modules/mobx-state-tree/dist/types/complex-types/model" but cannot be named.
-    const { baseUri, ...rest } = snap as any
+    const { baseUri, ...rest } = snap
     if (!baseUri) {
       return rest
     }

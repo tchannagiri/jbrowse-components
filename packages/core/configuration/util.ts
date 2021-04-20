@@ -43,12 +43,12 @@ export function readConfObject(
   if (typeof slotPath === 'string') {
     let slot = confObject[slotPath]
     // check for the subconf being a map if we don't find it immediately
-    if (
-      !slot &&
-      isStateTreeNode(confObject) &&
-      isMapType(getType(confObject))
-    ) {
-      slot = confObject.get(slotPath)
+    if (!slot && isStateTreeNode(confObject)) {
+      if (isMapType(getType(confObject))) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const map = confObject as any
+        slot = map.get(slotPath)
+      }
     }
     if (!slot) {
       return undefined
@@ -83,7 +83,9 @@ export function readConfObject(
       isStateTreeNode(confObject) &&
       isMapType(getType(confObject))
     ) {
-      subConf = confObject.get(slotName)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const map = confObject as any
+      subConf = map.get(slotName)
     }
     if (!subConf) {
       return undefined

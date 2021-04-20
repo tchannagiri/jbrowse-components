@@ -300,8 +300,7 @@ export default function SequenceFeatureDetails(props: BaseProps) {
       return () => {}
     }
     const { assemblyManager, rpcManager } = getSession(model)
-    const { assemblyNames } = model.view || { assemblyNames: [] }
-    const [assemblyName] = assemblyNames
+    const [assemblyName] = model.view?.assemblyNames || []
     async function fetchSeq(start: number, end: number, refName: string) {
       const assembly = await assemblyManager.waitForAssembly(assemblyName)
       if (!assembly) {

@@ -34,7 +34,7 @@ export default abstract class RpcMethodType extends PluggableElementBase {
     return { ...serializedArgs, signal: undefined }
   }
 
-  abstract async execute(
+  abstract execute(
     serializedArgs: unknown,
     rpcDriverClassName: string,
   ): Promise<unknown>

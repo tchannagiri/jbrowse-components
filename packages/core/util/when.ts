@@ -14,7 +14,7 @@ export function when(
   getter: () => boolean,
   { timeout, signal, name }: WhenOpts = {},
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     let finished = false
 
     const whenPromise = mobxWhen(getter)

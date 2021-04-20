@@ -42,9 +42,12 @@ interface ConfigurationSchemaOptions {
   implicitIdentifier?: string
   baseConfiguration?: AnyConfigurationSchemaType
 
-  actions?: (self: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
-  views?: (self: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
-  extend?: (self: unknown) => any // eslint-disable-line @typescript-eslint/no-explicit-any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  actions?: (self: unknown) => any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  views?: (self: unknown) => any
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  extend?: (self: unknown) => any
   preProcessSnapshot?: (snapshot: {}) => {}
 }
 
@@ -220,12 +223,7 @@ function makeConfigurationSchemaModel<
   return schemaType
 }
 
-export interface AnyConfigurationSchemaType
-  extends ReturnType<typeof makeConfigurationSchemaModel> {
-  isJBrowseConfigurationSchema: boolean
-  jbrowseSchemaDefinition: ConfigurationSchemaDefinition
-  jbrowseSchemaOptions: ConfigurationSchemaOptions
-}
+export type AnyConfigurationSchemaType = any
 
 export type AnyConfigurationModel = Instance<AnyConfigurationSchemaType>
 

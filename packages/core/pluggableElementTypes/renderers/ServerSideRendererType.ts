@@ -83,8 +83,9 @@ export default class ServerSideRenderer extends RendererType {
       ...results,
       RenderingComponent: this.ReactComponent,
     })
-    delete results.html
-    return { ...results, reactElement }
+
+    const { html, ...rest } = results
+    return { ...rest, reactElement }
   }
 
   /**
@@ -126,8 +127,8 @@ export default class ServerSideRenderer extends RendererType {
         results.reactElement,
       ),
     )
-    delete results.reactElement
-    return { ...results, html }
+    const { reactElement, ...rest } = results
+    return { ...rest, html }
   }
 
   /**

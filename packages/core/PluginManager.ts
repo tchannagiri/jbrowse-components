@@ -227,8 +227,8 @@ export default class PluginManager {
     // run the creation callbacks for each element type in order.
     // see elementCreationSchedule above for the creation order
     this.elementCreationSchedule.run()
-    delete this.elementCreationSchedule
-    return this
+    const { elementCreationSchedule, ...rest } = this
+    return rest
   }
 
   setRootModel(rootModel: AbstractRootModel) {

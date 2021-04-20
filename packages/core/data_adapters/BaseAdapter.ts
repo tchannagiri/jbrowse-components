@@ -87,8 +87,8 @@ export abstract class BaseFeatureDataAdapter extends BaseAdapter {
    * the array will be empty
    * @param opts - Feature adapter options
    */
-  public abstract async getRefNames(opts?: BaseOptions): Promise<string[]>
-  // public abstract async getRefNames(opts?: BaseOptions): Promise<string[]>
+  public abstract getRefNames(opts?: BaseOptions): Promise<string[]>
+  // public abstract getRefNames(opts?: BaseOptions): Promise<string[]>
   //   await this.setup()
   //   const { refNames } = this.metadata
   //   return refNames
