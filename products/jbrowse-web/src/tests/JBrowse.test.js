@@ -141,7 +141,7 @@ test('variant track test - opens feature detail view', async () => {
 test('widget drawer navigation', async () => {
   const pluginManager = getPluginManager(undefined, true)
   const state = pluginManager.rootModel
-  const { findByTestId, findByText, getByTestId } = render(
+  const { findByTestId, findByText } = render(
     <JBrowse pluginManager={pluginManager} />,
   )
   await findByText('Help')
@@ -150,38 +150,34 @@ test('widget drawer navigation', async () => {
   fireEvent.click(await findByTestId('htsTrackEntry-volvox_filtered_vcf'))
   fireEvent.click(await findByTestId('htsTrackEntryMenu-volvox_filtered_vcf'))
   fireEvent.click(await findByText('Settings'))
-  await expect(findByTestId('configEditor')).resolves.toBeTruthy()
+  await findByTestId('configEditor')
   // shows up when there  active widgets
-  const widgetSelect = await findByTestId('widget-drawer-selects')
-  const button = getByRole(widgetSelect, 'button')
-  fireEvent.mouseDown(button)
-  const popoverMenuItem = await screen.findByTestId(
-    'widget-drawer-selects-item-HierarchicalTrackSelectorWidget',
+  fireEvent.mouseDown(
+    getByRole(await findByTestId('widget-drawer-selects'), 'button'),
   )
-  fireEvent.click(popoverMenuItem)
+  fireEvent.click(
+    await screen.findByTestId(
+      'widget-drawer-selects-item-HierarchicalTrackSelectorWidget',
+    ),
+  )
   await findByTestId('hierarchical_track_selector')
 
   // test minimize and maximize widget drawer
   expect(state.session.minimized).toBeFalsy()
 
   await findByTestId('drawer-minimize')
-  const minimizeButton = await getByTestId('drawer-minimize')
-  fireEvent.click(minimizeButton)
+  fireEvent.click(await findByTestId('drawer-minimize'))
   expect(state.session.minimized).toBeTruthy()
 
-  const fabMaximize = await screen.findByTestId('drawer-maximize')
-  fireEvent.click(fabMaximize)
+  await screen.fireEvent.click(findByTestId('drawer-maximize'))
   expect(state.session.minimized).toBeFalsy()
 
   // test deleting widget from select dropdown using trash icon
   expect(state.session.activeWidgets.size).toEqual(2)
-  const widgetSelect2 = await findByTestId('widget-drawer-selects')
-  const button2 = getByRole(widgetSelect2, 'button')
-  fireEvent.mouseDown(button2)
-  const popoverDeleteIcon = await screen.findByTestId(
-    'ConfigurationEditorWidget-drawer-delete',
+  fireEvent.mouseDown(
+    getByRole(await findByTestId('widget-drawer-selects'), 'button'),
   )
-  fireEvent.click(popoverDeleteIcon)
+  fireEvent.click(findByTestId('ConfigurationEditorWidget-drawer-delete'))
   expect(state.session.activeWidgets.size).toEqual(1)
 })
 describe('assembly aliases', () => {
