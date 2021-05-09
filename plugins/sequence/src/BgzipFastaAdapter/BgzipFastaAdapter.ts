@@ -6,7 +6,7 @@ import { readConfObject } from '@jbrowse/core/configuration'
 import IndexedFasta from '../IndexedFastaAdapter/IndexedFastaAdapter'
 import MyConfigSchema from './configSchema'
 
-export default class extends IndexedFasta {
+export default class BgzipIndexedFastaAdapter extends IndexedFasta {
   public constructor(config: Instance<typeof MyConfigSchema>) {
     super(config)
     const fastaLocation = readConfObject(config, 'fastaLocation')

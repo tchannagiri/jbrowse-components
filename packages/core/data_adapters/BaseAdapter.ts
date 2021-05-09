@@ -1,5 +1,5 @@
 import { Observable, merge } from 'rxjs'
-import { takeUntil } from 'rxjs/operators'
+import { takeUntil, toArray } from 'rxjs/operators'
 import { isStateTreeNode, getSnapshot } from 'mobx-state-tree'
 import { ObservableCreate } from '../util/rxjs'
 import { checkAbortSignal, hashCode, observeAbortSignal } from '../util'
@@ -266,9 +266,17 @@ export interface RegionsAdapter extends BaseAdapter {
   getRegions(opts: BaseOptions): Promise<NoAssemblyRegion[]>
 }
 
-export interface SequenceAdapter
-  extends BaseFeatureDataAdapter,
-    RegionsAdapter {}
+export abstract class SequenceAdapter extends BaseFeatureDataAdapter {
+  public async getRegionSequence(region: Region) {
+    const feat = await this.getFeatures(region).pipe(toArray()).toPromise()
+    if (!feat[0]) {
+      throw new Error('no feature found for sequence')
+    }
+    return feat[0]?.get('seq')
+  }
+
+  public abstract getRegions(opts: BaseOptions): Promise<NoAssemblyRegion[]>
+}
 
 export function isSequenceAdapter(
   thing: AnyDataAdapter,

@@ -1,7 +1,4 @@
-import {
-  BaseFeatureDataAdapter,
-  SequenceAdapter,
-} from '@jbrowse/core/data_adapters/BaseAdapter'
+import { SequenceAdapter } from '@jbrowse/core/data_adapters/BaseAdapter'
 import { NoAssemblyRegion } from '@jbrowse/core/util/types'
 import { openLocation } from '@jbrowse/core/util/io'
 import { ObservableCreate } from '@jbrowse/core/util/rxjs'
@@ -12,9 +9,7 @@ import { Instance } from 'mobx-state-tree'
 
 import configSchema from './configSchema'
 
-export default class TwoBitAdapter
-  extends BaseFeatureDataAdapter
-  implements SequenceAdapter {
+export default class TwoBitAdapter extends SequenceAdapter {
   private twobit: typeof TwoBitFile
 
   constructor(config: Instance<typeof configSchema>) {

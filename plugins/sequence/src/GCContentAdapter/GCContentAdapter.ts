@@ -8,7 +8,7 @@ import SimpleFeature, { Feature } from '@jbrowse/core/util/simpleFeature'
 import { readConfObject } from '@jbrowse/core/configuration'
 import { toArray } from 'rxjs/operators'
 
-export default class extends BaseFeatureDataAdapter {
+export default class GCContentAdapter extends BaseFeatureDataAdapter {
   private windowSize = 1000
 
   private windowDelta = 1000
