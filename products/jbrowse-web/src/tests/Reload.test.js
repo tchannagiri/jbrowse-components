@@ -10,7 +10,7 @@ import { LocalFile } from 'generic-filehandle'
 import { clearCache } from '@jbrowse/core/util/io/rangeFetcher'
 import { clearAdapterCache } from '@jbrowse/core/data_adapters/dataAdapterCache'
 import JBrowse from '../JBrowse'
-import { setup, getPluginManager, generateReadBuffer } from './util'
+import { setup, getPluginManager, generateReadBuffer, getImg } from './util'
 
 expect.extend({ toMatchImageSnapshot })
 
@@ -58,10 +58,7 @@ describe('reload tests', () => {
     const buttons = await findAllByTestId('reload_button')
     fireEvent.click(buttons[0])
     const canvas = await findAllByTestId('prerendered_canvas', ...wait)
-    const pileupImg = canvas[0].toDataURL()
-    const pileupData = pileupImg.replace(/^data:image\/\w+;base64,/, '')
-    const pileupBuf = Buffer.from(pileupData, 'base64')
-    expect(pileupBuf).toMatchImageSnapshot({
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -92,10 +89,7 @@ describe('reload tests', () => {
     const buttons = await findAllByTestId('reload_button')
     fireEvent.click(buttons[0])
     const canvas = await findAllByTestId('prerendered_canvas', ...wait)
-    const pileupImg = canvas[0].toDataURL()
-    const pileupData = pileupImg.replace(/^data:image\/\w+;base64,/, '')
-    const pileupBuf = Buffer.from(pileupData, 'base64')
-    expect(pileupBuf).toMatchImageSnapshot({
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -121,10 +115,7 @@ describe('reload tests', () => {
     const buttons = await findAllByTestId('reload_button')
     fireEvent.click(buttons[0])
     const canvas = await findAllByTestId('prerendered_canvas', ...wait)
-    const pileupImg = canvas[0].toDataURL()
-    const pileupData = pileupImg.replace(/^data:image\/\w+;base64,/, '')
-    const pileupBuf = Buffer.from(pileupData, 'base64')
-    expect(pileupBuf).toMatchImageSnapshot({
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -150,11 +141,7 @@ describe('reload tests', () => {
     const buttons = await findAllByTestId('reload_button')
     fireEvent.click(buttons[0])
     const canvas = await findAllByTestId('prerendered_canvas', ...wait)
-
-    const pileupImg = canvas[0].toDataURL()
-    const pileupData = pileupImg.replace(/^data:image\/\w+;base64,/, '')
-    const pileupBuf = Buffer.from(pileupData, 'base64')
-    expect(pileupBuf).toMatchImageSnapshot({
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -183,10 +170,7 @@ describe('reload tests', () => {
     const buttons = await findAllByTestId('reload_button')
     fireEvent.click(buttons[0])
     const canvas = await findAllByTestId('prerendered_canvas', ...wait)
-    const bigwigImg = canvas[0].toDataURL()
-    const bigwigData = bigwigImg.replace(/^data:image\/\w+;base64,/, '')
-    const bigwigBuf = Buffer.from(bigwigData, 'base64')
-    expect(bigwigBuf).toMatchImageSnapshot({
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.01,
       failureThresholdType: 'percent',
     })

@@ -28,6 +28,8 @@ beforeEach(() => {
     }),
   )
 })
+
+const wait = [{}, { timeout: 10000 }]
 describe('valid file tests', () => {
   it('access about menu', async () => {
     const pluginManager = getPluginManager()
@@ -49,8 +51,7 @@ describe('valid file tests', () => {
     const start = state.session.views[0].offsetPx
     const track = await findByTestId(
       'display-volvox_alignments_alignments',
-      {},
-      { timeout: 10000 },
+      ...wait,
     )
     fireEvent.mouseDown(track, { clientX: 250, clientY: 20 })
     fireEvent.mouseMove(track, { clientX: 100, clientY: 20 })
@@ -67,11 +68,7 @@ describe('valid file tests', () => {
     const { findByTestId, findByText } = render(
       <JBrowse pluginManager={pluginManager} />,
     )
-    const track = await findByTestId(
-      'rubberBand_controls',
-      {},
-      { timeout: 10000 },
-    )
+    const track = await findByTestId('rubberBand_controls', ...wait)
 
     expect(state.session.views[0].bpPerPx).toEqual(0.05)
     fireEvent.mouseDown(track, { clientX: 100, clientY: 0 })
@@ -90,8 +87,7 @@ describe('valid file tests', () => {
     )
     const rubberBandComponent = await findByTestId(
       'rubberBand_controls',
-      {},
-      { timeout: 10000 },
+      ...wait,
     )
 
     expect(state.session.views[0].bpPerPx).toEqual(0.05)
@@ -114,8 +110,7 @@ describe('valid file tests', () => {
     const trackId1 = state.session.views[0].tracks[1].id
     const dragHandle0 = await findByTestId(
       'dragHandle-integration_test-volvox_alignments',
-      {},
-      { timeout: 10000 },
+      ...wait,
     )
     const trackRenderingContainer1 = await findByTestId(
       'trackRenderingContainer-integration_test-volvox_filtered_vcf',
@@ -142,7 +137,7 @@ describe('valid file tests', () => {
     const { findByTestId, findAllByText } = render(
       <JBrowse pluginManager={pluginManager} />,
     )
-    await findAllByText('ctgA', {}, { timeout: 10000 })
+    await findAllByText('ctgA', ...wait)
     const before = state.session.views[0].bpPerPx
     fireEvent.click(await findByTestId('zoom_in'))
     await waitFor(
@@ -185,8 +180,7 @@ describe('valid file tests', () => {
     state.session.views[0].setNewView(20, 0)
     await findByTestId(
       'display-volvox_refseq-LinearReferenceSequenceDisplay',
-      {},
-      { timeout: 10000 },
+      ...wait,
     )
     expect(getAllByText('Zoom in to see sequence')).toBeTruthy()
   }, 10000)
@@ -199,11 +193,7 @@ describe('valid file tests', () => {
     )
 
     fireEvent.click(await findByTestId('htsTrackEntry-volvox_alignments'))
-    await findByTestId(
-      'display-volvox_alignments_alignments',
-      {},
-      { timeout: 10000 },
-    )
+    await findByTestId('display-volvox_alignments_alignments', ...wait)
 
     // opens the view menu and selects show center line
     const viewMenu = await findByTestId('view_menu_icon')
@@ -228,8 +218,7 @@ describe('valid file tests', () => {
     fireEvent.click(await findByTestId('htsTrackEntry-volvox_alignments'))
     await findByTestId(
       'trackRenderingContainer-integration_test-volvox_alignments',
-      {},
-      { timeout: 10000 },
+      ...wait,
     )
 
     const autocomplete = await findByTestId('autocomplete')

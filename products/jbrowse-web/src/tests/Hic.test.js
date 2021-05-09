@@ -6,7 +6,7 @@ import { LocalFile } from 'generic-filehandle'
 // locals
 import { toMatchImageSnapshot } from 'jest-image-snapshot'
 
-import { setup, generateReadBuffer, getPluginManager } from './util'
+import { setup, generateReadBuffer, getPluginManager, getImg } from './util'
 import JBrowse from '../JBrowse'
 import hicConfig from '../../../../extra_test_data/hic_integration_test.json'
 
@@ -20,9 +20,7 @@ hicConfig.configuration = {
   },
 }
 
-function timeout(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
+const wait = [{}, { timeout: 10000 }]
 
 test('hic', async () => {
   fetch.resetMocks()
@@ -40,18 +38,9 @@ test('hic', async () => {
   )
   state.session.views[0].setNewView(5000, 0)
   fireEvent.click(await findByTestId('htsTrackEntry-hic_test'))
-  await timeout(1000)
-  const canvas = await findAllByTestId(
-    'prerendered_canvas',
-    {},
-    {
-      timeout: 10000,
-    },
-  )
-  const bigwigImg = canvas[0].toDataURL()
-  const bigwigData = bigwigImg.replace(/^data:image\/\w+;base64,/, '')
-  const bigwigBuf = Buffer.from(bigwigData, 'base64')
-  expect(bigwigBuf).toMatchImageSnapshot({
+  const canvas = await findAllByTestId('prerendered_canvas', ...wait)
+
+  expect(getImg(canvas[0])).toMatchImageSnapshot({
     failureThreshold: 0.05,
     failureThresholdType: 'percent',
   })

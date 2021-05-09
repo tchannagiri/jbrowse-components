@@ -8,7 +8,7 @@ import { clearCache } from '@jbrowse/core/util/io/rangeFetcher'
 import { clearAdapterCache } from '@jbrowse/core/data_adapters/dataAdapterCache'
 import { toMatchImageSnapshot } from 'jest-image-snapshot'
 
-import { setup, generateReadBuffer, getPluginManager } from './util'
+import { setup, generateReadBuffer, getPluginManager, getImg } from './util'
 import JBrowse from '../JBrowse'
 
 expect.extend({ toMatchImageSnapshot })
@@ -26,6 +26,8 @@ beforeEach(() => {
   )
 })
 
+const wait = [{}, { timeout: 10000 }]
+
 describe('bigwig', () => {
   it('open a bigwig track', async () => {
     const pluginManager = getPluginManager()
@@ -36,17 +38,8 @@ describe('bigwig', () => {
     await findByText('Help')
     state.session.views[0].setNewView(5, 0)
     fireEvent.click(await findByTestId('htsTrackEntry-volvox_microarray'))
-    const canvas = await findAllByTestId(
-      'prerendered_canvas',
-      {},
-      {
-        timeout: 10000,
-      },
-    )
-    const bigwigImg = canvas[0].toDataURL()
-    const bigwigData = bigwigImg.replace(/^data:image\/\w+;base64,/, '')
-    const bigwigBuf = Buffer.from(bigwigData, 'base64')
-    expect(bigwigBuf).toMatchImageSnapshot({
+    const canvas = await findAllByTestId('prerendered_canvas', ...wait)
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -60,17 +53,8 @@ describe('bigwig', () => {
     await findByText('Help')
     state.session.views[0].setNewView(10, 0)
     fireEvent.click(await findByTestId('htsTrackEntry-volvox_microarray_line'))
-    const canvas = await findAllByTestId(
-      'prerendered_canvas',
-      {},
-      {
-        timeout: 10000,
-      },
-    )
-    const bigwigImg = canvas[0].toDataURL()
-    const bigwigData = bigwigImg.replace(/^data:image\/\w+;base64,/, '')
-    const bigwigBuf = Buffer.from(bigwigData, 'base64')
-    expect(bigwigBuf).toMatchImageSnapshot({
+    const canvas = await findAllByTestId('prerendered_canvas', ...wait)
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -86,17 +70,8 @@ describe('bigwig', () => {
     fireEvent.click(
       await findByTestId('htsTrackEntry-volvox_microarray_density'),
     )
-    const canvas = await findAllByTestId(
-      'prerendered_canvas',
-      {},
-      {
-        timeout: 10000,
-      },
-    )
-    const bigwigImg = canvas[0].toDataURL()
-    const bigwigData = bigwigImg.replace(/^data:image\/\w+;base64,/, '')
-    const bigwigBuf = Buffer.from(bigwigData, 'base64')
-    expect(bigwigBuf).toMatchImageSnapshot({
+    const canvas = await findAllByTestId('prerendered_canvas', ...wait)
+    expect(getImg(canvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })

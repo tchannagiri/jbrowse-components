@@ -13,7 +13,7 @@ import { LocalFile } from 'generic-filehandle'
 import { clearCache } from '@jbrowse/core/util/io/rangeFetcher'
 import { clearAdapterCache } from '@jbrowse/core/data_adapters/dataAdapterCache'
 import { toMatchImageSnapshot } from 'jest-image-snapshot'
-import { setup, generateReadBuffer, getPluginManager } from './util'
+import { setup, generateReadBuffer, getPluginManager, getImg } from './util'
 import JBrowse from '../JBrowse'
 
 expect.extend({ toMatchImageSnapshot })
@@ -32,6 +32,7 @@ beforeEach(() => {
 })
 
 const delay = { timeout: 10000 }
+const wait = [{}, delay]
 
 describe('alignments track', () => {
   it('opens an alignments track', async () => {
@@ -47,25 +48,19 @@ describe('alignments track', () => {
     )
 
     const { findAllByTestId: findAllByTestId1 } = within(
-      await findByTestId('Blockset-pileup', {}, delay),
+      await findByTestId('Blockset-pileup', ...wait),
     )
-    const pileupCanvas = await findAllByTestId1('prerendered_canvas', {}, delay)
-    const pileupImg = pileupCanvas[0].toDataURL()
-    const pileupData = pileupImg.replace(/^data:image\/\w+;base64,/, '')
-    const pileupBuf = Buffer.from(pileupData, 'base64')
-    expect(pileupBuf).toMatchImageSnapshot({
+    const pileupCanvas = await findAllByTestId1('prerendered_canvas', ...wait)
+    expect(getImg(pileupCanvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
 
     const { findAllByTestId: findAllByTestId2 } = within(
-      await findByTestId('Blockset-snpcoverage', {}, delay),
+      await findByTestId('Blockset-snpcoverage', ...wait),
     )
-    const snpCovCanvas = await findAllByTestId2('prerendered_canvas', {}, delay)
-    const snpCovImg = snpCovCanvas[0].toDataURL()
-    const snpCovData = snpCovImg.replace(/^data:image\/\w+;base64,/, '')
-    const snpCovBuf = Buffer.from(snpCovData, 'base64')
-    expect(snpCovBuf).toMatchImageSnapshot({
+    const snpCovCanvas = await findAllByTestId2('prerendered_canvas', ...wait)
+    expect(getImg(snpCovCanvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -112,13 +107,9 @@ describe('alignments track', () => {
 
     const pileupCanvas = await findAllByTestId1(
       'prerendered_canvas_softclipped',
-      {},
-      delay,
+      ...wait,
     )
-    const pileupImg = pileupCanvas[0].toDataURL()
-    const pileupData = pileupImg.replace(/^data:image\/\w+;base64,/, '')
-    const pileupBuf = Buffer.from(pileupData, 'base64')
-    expect(pileupBuf).toMatchImageSnapshot({
+    expect(getImg(pileupCanvas[0])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -137,8 +128,7 @@ describe('alignments track', () => {
     fireEvent.click(await findByTestId('htsTrackEntry-volvox-long-reads-cram'))
     await findByTestId(
       'display-volvox-long-reads-cram-LinearAlignmentsDisplay',
-      {},
-      delay,
+      ...wait,
     )
     expect(state.session.views[0].tracks[0]).toBeTruthy()
 
@@ -150,17 +140,14 @@ describe('alignments track', () => {
     fireEvent.click(await findByText('Read strand'))
 
     // wait for pileup track to render with sort
-    await findAllByTestId('pileup-Read strand', {}, delay)
+    await findAllByTestId('pileup-Read strand', ...wait)
 
     // wait for pileup track to render
     const { findAllByTestId: findAllByTestId1 } = within(
       await findByTestId('Blockset-pileup'),
     )
     const canvases = await findAllByTestId1('prerendered_canvas')
-    const img = canvases[1].toDataURL()
-    const data = img.replace(/^data:image\/\w+;base64,/, '')
-    const buf = Buffer.from(data, 'base64')
-    expect(buf).toMatchImageSnapshot({
+    expect(getImg(canvases[1])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -186,17 +173,14 @@ describe('alignments track', () => {
     fireEvent.click(await findByText('Strand'))
 
     // wait for pileup track to render with color
-    await findAllByTestId('pileup-strand', {}, delay)
+    await findAllByTestId('pileup-strand', ...wait)
 
     // wait for pileup track to render
     const { findAllByTestId: findAllByTestId1 } = within(
       await findByTestId('Blockset-pileup'),
     )
     const canvases = await findAllByTestId1('prerendered_canvas')
-    const img = canvases[1].toDataURL()
-    const data = img.replace(/^data:image\/\w+;base64,/, '')
-    const buf = Buffer.from(data, 'base64')
-    expect(buf).toMatchImageSnapshot({
+    expect(getImg(canvases[1])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -236,10 +220,7 @@ describe('alignments track', () => {
       await findByTestId('Blockset-pileup'),
     )
     const canvases = await findAllByTestId1('prerendered_canvas')
-    const img = canvases[1].toDataURL()
-    const data = img.replace(/^data:image\/\w+;base64,/, '')
-    const buf = Buffer.from(data, 'base64')
-    expect(buf).toMatchImageSnapshot({
+    expect(getImg(canvases[1])).toMatchImageSnapshot({
       failureThreshold: 0.05,
       failureThresholdType: 'percent',
     })
@@ -254,7 +235,7 @@ describe('alignments track', () => {
       await findByTestId('htsTrackEntry-volvox_bam_small_max_height'),
     )
 
-    await findAllByText('Max height reached', {}, delay)
+    await findAllByText('Max height reached', ...wait)
   }, 20000)
 
   it('test snpcoverage doesnt count snpcoverage', async () => {
@@ -284,23 +265,9 @@ describe('alignments track', () => {
     // this block tests that softclip avoids decrementing the total block
     // e.g. this line is not called for softclip/hardclip
     // bin.getNested('reference').decrement(strand, overlap)
-    expect(
-      Buffer.from(
-        snpCoverageCanvas[0]
-          .toDataURL()
-          .replace(/^data:image\/\w+;base64,/, ''),
-        'base64',
-      ),
-    ).toMatchImageSnapshot()
+    expect(getImg(snpCoverageCanvas[0])).toMatchImageSnapshot()
 
     // test that softclip doesn't contibute to coverage
-    expect(
-      Buffer.from(
-        snpCoverageCanvas[1]
-          .toDataURL()
-          .replace(/^data:image\/\w+;base64,/, ''),
-        'base64',
-      ),
-    ).toMatchImageSnapshot()
+    expect(getImg(snpCoverageCanvas[1])).toMatchImageSnapshot()
   }, 15000)
 })

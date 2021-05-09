@@ -80,5 +80,11 @@ export function setup() {
   Storage.prototype.clear = jest.fn()
 }
 
+export function getImg(canvas) {
+  const img = canvas.toDataURL()
+  const data = img.replace(/^data:image\/\w+;base64,/, '')
+  return Buffer.from(data, 'base64')
+}
+
 // eslint-disable-next-line no-native-reassign,no-global-assign
 window = Object.assign(window, { innerWidth: 800 })
