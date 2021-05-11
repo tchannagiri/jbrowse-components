@@ -103,7 +103,7 @@ describe('configuration schemas', () => {
     expect(getConf(model, 'someInteger')).toEqual(42)
 
     const model2 = container.create({ configuration: {} })
-    expect(getSnapshot(model2)).toEqual({ configuration: {} })
+    expect(getSnapshot(model2)).toEqual({ configuration: undefined })
     expect(getConf(model2, 'someInteger')).toEqual(12)
   })
   test('can snapshot a nested schema 1', () => {
@@ -144,7 +144,7 @@ describe('configuration schemas', () => {
       configuration: {
         someInteger: 42,
         // mySubConfiguration is set to the default, so doesn't appear in snapshot
-        myArrayOfSubConfigurations: [{}, { someNumber: 11.1 }],
+        myArrayOfSubConfigurations: [undefined, { someNumber: 11.1 }],
       },
     })
   })
@@ -193,7 +193,7 @@ describe('configuration schemas', () => {
     })
     expect(getSnapshot(model)).toEqual({
       configuration: {
-        myConfigurationMap: { nog: {} },
+        myConfigurationMap: { nog: undefined },
         mySubConfiguration: { someNumber: 12 },
       },
     })
