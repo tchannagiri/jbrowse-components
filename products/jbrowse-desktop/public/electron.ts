@@ -1,4 +1,3 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { app, ipcMain, shell, BrowserWindow, Menu } from 'electron'
 
 const debug = require('electron-debug')
@@ -156,8 +155,6 @@ ipcMain.on('createWindowWorker', event => {
 
 ipcMain.handle('getMainWindowId', async () => (mainWindow || {}).id)
 
-<<<<<<< HEAD:products/jbrowse-desktop/public/electron.js
-=======
 // merge function to get stuff from a development config into a production one
 // limited functionality, difficult to use existing merge-deep/mixin-deep type
 // things for this
@@ -172,20 +169,7 @@ interface Config {
   savedSessions: unknown[]
   datasets: Dataset[]
 }
-function mergeConfigs(A: Config, B: Config) {
-  const X: { [key: string]: Dataset } = {}
-  const Y: { [key: string]: Dataset } = {}
-  A.datasets.forEach(a => {
-    X[a.assembly.name] = a
-  })
-  B.datasets.forEach(b => {
-    Y[b.assembly.name] = b
-  })
-  A.savedSessions = (A.savedSessions || []).concat(B.savedSessions)
-  return Object.values(merge(X, Y))
-}
 
->>>>>>> b6221b1b3... Make the electron starter script typescriptified:products/jbrowse-desktop/rescripts/public/electron.ts
 ipcMain.handle('loadConfig', async () => {
   try {
     return JSON.parse(await fsReadFile(configLocation, { encoding: 'utf8' }))
@@ -335,21 +319,13 @@ ipcMain.handle('deleteSession', async (event, sessionName) => {
 
 ipcMain.handle('fetch', async (event, ...args) => {
   const response = await fetch(...args)
-<<<<<<< HEAD:products/jbrowse-desktop/public/electron.js
-  const serializableResponse = {
-=======
   return {
->>>>>>> b6221b1b3... Make the electron starter script typescriptified:products/jbrowse-desktop/rescripts/public/electron.ts
     headers: Array.from(response.headers),
     url: response.url,
     status: response.status,
     statusText: response.statusText,
     buffer: await response.buffer(),
   }
-<<<<<<< HEAD:products/jbrowse-desktop/public/electron.js
-  return serializableResponse
-=======
->>>>>>> b6221b1b3... Make the electron starter script typescriptified:products/jbrowse-desktop/rescripts/public/electron.ts
 })
 
 ipcMain.handle('read', async (event, ...args) => {
