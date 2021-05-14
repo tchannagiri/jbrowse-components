@@ -36,7 +36,8 @@ export const BaseDisplay = types
     },
 
     get adapterConfig() {
-      return getConf(this.parentTrack, 'adapter')
+      const conf = getConf(this.parentTrack, 'adapter')
+      return conf || { type: getConf(this.parentTrack, ['adapter', 'type']) }
     },
 
     get parentTrack() {
