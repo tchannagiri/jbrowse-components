@@ -157,12 +157,4 @@ Object {
 }
 `;
 
-exports[`Root MST model creates with defaults 1`] = `
-Object {
-  "rpc": Object {
-    "drivers": Object {
-      "MainThreadRpcDriver": undefined,
-    },
-  },
-}
-`;
+exports[`Root MST model creates with defaults 1`] = `Object {}`;

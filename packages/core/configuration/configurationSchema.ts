@@ -198,13 +198,16 @@ function makeConfigurationSchemaModel<
     : identifierDefault
 
   const defaultSnap = getSnapshot(completeModel.create(modelDefault))
-  // @ts-ignore
   completeModel = completeModel.postProcessSnapshot(snap => {
     const newSnap: SnapshotOut<typeof completeModel> = {}
     let matchesDefault = true
     // let keyCount = 0
     for (const [key, value] of Object.entries(snap)) {
-      if (defaultSnap[key] !== value) {
+      if (typeof defaultSnap[key] === 'object' && typeof value === 'object') {
+        if (JSON.stringify(defaultSnap[key]) !== JSON.stringify(value)) {
+          matchesDefault = false
+        }
+      } else if (defaultSnap[key] !== value) {
         matchesDefault = false
       }
       if (
@@ -218,7 +221,7 @@ function makeConfigurationSchemaModel<
       }
     }
     if (matchesDefault) {
-      return undefined
+      return {}
     }
     return newSnap
   })
