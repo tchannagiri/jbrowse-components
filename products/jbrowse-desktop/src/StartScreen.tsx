@@ -107,26 +107,13 @@ const RenameSessionDialog = ({
 }) => {
   const ipcRenderer = window.electronBetterIpc.ipcRenderer || blankIpc
   const [newSessionName, setNewSessionName] = useState('')
-  const [renameSession, setRenameSession] = useState(false)
-  useEffect(() => {
-    ;(async () => {
-      try {
-        if (renameSession) {
-          setRenameSession(false)
-          await ipcRenderer.invoke(
-            'renameSession',
-            sessionToRename,
-            newSessionName,
-          )
-          onClose(true)
-        }
-      } catch (e) {
-        setRenameSession(() => {
-          throw e
-        })
-      }
-    })()
-  }, [ipcRenderer, newSessionName, onClose, renameSession, sessionToRename])
+  const [error, setError] = useState<Error>()
+
+  const err =
+    error ||
+    (sessionNames.includes(newSessionName)
+      ? 'There is already a session named &quot;{newSessionName}&quot;'
+      : '')
 
   return (
     <Dialog open={!!sessionToRename} onClose={() => onClose(false)}>
@@ -135,17 +122,13 @@ const RenameSessionDialog = ({
         <DialogContentText id="alert-dialog-description">
           Please enter a new name for the session:
         </DialogContentText>
-        {sessionNames.includes(newSessionName) ? (
-          <DialogContentText color="error">
-            There is already a session named &quot;{newSessionName}&quot;
-          </DialogContentText>
+        {err ? (
+          <DialogContentText color="error">{`${err}`}</DialogContentText>
         ) : null}
         <Input
           autoFocus
           defaultValue={sessionToRename}
-          onChange={event => {
-            setNewSessionName(event.target.value)
-          }}
+          onChange={event => setNewSessionName(event.target.value)}
         />
       </DialogContent>
       <DialogActions>
@@ -153,8 +136,18 @@ const RenameSessionDialog = ({
           Cancel
         </Button>
         <Button
-          onClick={() => {
-            setRenameSession(true)
+          onClick={async () => {
+            try {
+              await ipcRenderer.invoke(
+                'renameSession',
+                sessionToRename,
+                newSessionName,
+              )
+              onClose(true)
+            } catch (e) {
+              console.error(e)
+              setError(e)
+            }
           }}
           color="primary"
           variant="contained"
@@ -181,7 +174,6 @@ export default function StartScreen({
   const [sessionToDelete, setSessionToDelete] = useState<string | undefined>()
   const [sessionToRename, setSessionToRename] = useState<string | undefined>()
   const [sessionToLoad, setSessionToLoad] = useState<string | undefined>()
-  const [updateSessionsList, setUpdateSessionsList] = useState(true)
   const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null)
   const [reset, setReset] = useState(false)
   const classes = useStyles()
@@ -194,11 +186,13 @@ export default function StartScreen({
       sessions
         ? Object.entries(sessions).sort(
             (a: any, b: any) =>
-              b[1].stats?.mtimeMs || 0 - a[1].stats?.mtimeMs || 0,
+              (b[1].stats?.mtimeMs || 0) - (a[1].stats?.mtimeMs || 0),
           )
         : [],
     [sessions],
   )
+
+  console.log({ sessions })
 
   useEffect(() => {
     ;(async () => {
@@ -220,23 +214,6 @@ export default function StartScreen({
     })()
   }, [bypass, ipcRenderer, root, sessionToLoad, sortedSessions])
 
-  useEffect(() => {
-    ;(async () => {
-      try {
-        if (updateSessionsList) {
-          setUpdateSessionsList(false)
-
-          const sess = await ipcRenderer.invoke('listSessions')
-          setSessions(sess)
-        }
-      } catch (e) {
-        setSessions(() => {
-          throw e
-        })
-      }
-    })()
-  }, [ipcRenderer, updateSessionsList])
-
   if (!sessions) {
     return (
       <CircularProgress
@@ -250,6 +227,18 @@ export default function StartScreen({
         size={50}
       />
     )
+  }
+
+  async function updateSessionsList() {
+    try {
+      const sess = await ipcRenderer.invoke('listSessions')
+      setSessions(sess)
+    } catch (e) {
+      console.error(e)
+      setSessions(() => {
+        throw e
+      })
+    }
   }
 
   return (
@@ -266,14 +255,18 @@ export default function StartScreen({
         sessionNames={sessionNames}
         onClose={(update: boolean) => {
           setSessionToRename(undefined)
-          setUpdateSessionsList(update)
+          if (update) {
+            updateSessionsList()
+          }
         }}
       />
       <DeleteSessionDialog
         sessionToDelete={sessionToDelete}
         onClose={update => {
           setSessionToDelete(undefined)
-          setUpdateSessionsList(update)
+          if (update) {
+            updateSessionsList()
+          }
         }}
       />
       <IconButton
