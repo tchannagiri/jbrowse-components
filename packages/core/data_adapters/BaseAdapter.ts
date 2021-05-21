@@ -49,7 +49,7 @@ function idMaker(args: any, id = '') {
     if (id.length > 5000) {
       break
     }
-    if (typeof args[key] === 'object') {
+    if (typeof args[key] === 'object' && args[key]) {
       id += idMaker(args[key], id)
     } else {
       id += `${key}-${args[key]};`
@@ -221,7 +221,7 @@ export abstract class BaseFeatureDataAdapter extends BaseAdapter {
     return refNames.includes(refName)
   }
 
-  public getRegionStats(region: Region, opts?: BaseOptions) {
+  public async getRegionStats(region: Region, opts?: BaseOptions) {
     const feats = this.getFeatures(region, opts)
     return scoresToStats(region, feats)
   }

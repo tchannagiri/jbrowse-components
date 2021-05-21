@@ -52,7 +52,7 @@
     "load-script2": "^2.0.5",
     "object.fromentries": "^2.0.0",
     "pako": "^1.0.10",
-    "react-error-boundary": "^1.2.5",
+    "react-error-boundary": "^3.0.0",
     "react-intersection-observer": "^8.31.0",
     "react-measure": "^2.3.0",
     "shortid": "^2.2.13",
@@ -68,8 +68,8 @@
     "mobx-react": "^6.0.0",
     "mobx-state-tree": "^3.14.1",
     "prop-types": "^15.0.0",
-    "react": "^16.8.0",
-    "react-dom": "^16.8.0",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
     "rxjs": "^6.0.0"
   },
   "publishConfig": {

@@ -1,4 +1,4 @@
-import { PluginConstructor } from '@jbrowse/core/Plugin'
+import { PluginRecord } from '@jbrowse/core/PluginLoader'
 import React, { useEffect, useState } from 'react'
 import {
   createViewState,
@@ -9,10 +9,6 @@ import {
 } from '../src'
 import volvoxConfig from '../public/test_data/volvox/config.json'
 import volvoxSession from '../public/volvox-session.json'
-
-export default {
-  title: 'Linear View',
-}
 
 const theme = createJBrowseTheme()
 
@@ -168,7 +164,7 @@ export const WithPlugins = () => {
   // const plugins = [UCSCPlugin]
 
   // alternative usage with runtime plugins
-  const [plugins, setPlugins] = useState<PluginConstructor[]>()
+  const [plugins, setPlugins] = useState<PluginRecord[]>()
   useEffect(() => {
     async function getPlugins() {
       const loadedPlugins = await loadPlugins([
@@ -217,7 +213,7 @@ export const WithPlugins = () => {
         },
       },
     },
-    plugins,
+    plugins: plugins.map(p => p.plugin),
     tracks: [
       {
         type: 'FeatureTrack',
@@ -277,3 +273,9 @@ export const WithPlugins = () => {
     </ThemeProvider>
   )
 }
+
+const JBrowseLinearGenomeViewStories = {
+  title: 'Linear View',
+}
+
+export default JBrowseLinearGenomeViewStories

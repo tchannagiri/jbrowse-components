@@ -137,8 +137,11 @@ const stateModelFactory = (
         }
       },
       setHeight(displayHeight: number) {
-        if (displayHeight > minDisplayHeight) self.height = displayHeight
-        else self.height = minDisplayHeight
+        if (displayHeight > minDisplayHeight) {
+          self.height = displayHeight
+        } else {
+          self.height = minDisplayHeight
+        }
         return self.height
       },
       resizeHeight(distance: number) {
@@ -179,6 +182,7 @@ const stateModelFactory = (
             // note: the snpcoverage display is not able to control filterBy
             // itself
             if (
+              self.PileupDisplay.filterBy &&
               !deepEqual(
                 getSnapshot(self.PileupDisplay.filterBy),
                 getSnapshot(self.SNPCoverageDisplay.filterBy),
@@ -186,6 +190,33 @@ const stateModelFactory = (
             ) {
               self.SNPCoverageDisplay.setFilterBy(
                 getSnapshot(self.PileupDisplay.filterBy),
+              )
+            }
+            if (
+              self.PileupDisplay.colorBy &&
+              !deepEqual(
+                getSnapshot(self.PileupDisplay.colorBy),
+                self.SNPCoverageDisplay.colorBy
+                  ? getSnapshot(self.SNPCoverageDisplay.colorBy)
+                  : {},
+              )
+            ) {
+              self.SNPCoverageDisplay.setColorBy(
+                getSnapshot(self.PileupDisplay.colorBy),
+              )
+            }
+            if (
+              !deepEqual(
+                self.SNPCoverageDisplay.modificationTagMap,
+                JSON.parse(
+                  JSON.stringify(self.PileupDisplay.modificationTagMap),
+                ),
+              )
+            ) {
+              self.SNPCoverageDisplay.setModificationTagMap(
+                JSON.parse(
+                  JSON.stringify(self.PileupDisplay.modificationTagMap),
+                ),
               )
             }
           }),

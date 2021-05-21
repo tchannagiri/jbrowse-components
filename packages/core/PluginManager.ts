@@ -32,6 +32,7 @@ import { AnyConfigurationSchemaType } from './configuration/configurationSchema'
 import { AbstractRootModel } from './util'
 import CorePlugin from './CorePlugin'
 import createJexlInstance from './util/jexl'
+import { PluginDefinition } from './PluginLoader'
 
 /** little helper class that keeps groups of callbacks that are
 then run in a specified order by group */
@@ -134,11 +135,14 @@ type AnyFunction = (...args: any) => any
  * Can also use this metadata to stash other things about why the plugin is
  * loaded, such as where it came from, what plugin depends on it, etc.
  */
-export type PluginMetaData = Record<string, unknown>
+export type PluginMetadata = Record<string, unknown>
 
-export type PluginLoadRecord = {
-  metadata: PluginMetaData
+export interface PluginLoadRecord {
+  metadata?: PluginMetadata
   plugin: Plugin
+}
+export interface RuntimePluginLoadRecord extends PluginLoadRecord {
+  definition: PluginDefinition
 }
 
 export default class PluginManager {
@@ -147,7 +151,9 @@ export default class PluginManager {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   jexl: any = createJexlInstance()
 
-  pluginMetaData: Record<string, PluginMetaData> = {}
+  pluginMetadata: Record<string, PluginMetadata> = {}
+
+  runtimePluginDefinitions: PluginDefinition[] = []
 
   elementCreationSchedule = new PhasedScheduler<PluggableElementTypeGroup>(
     'renderer',
@@ -200,17 +206,21 @@ export default class PluginManager {
     return configurationSchemas
   }
 
-  addPlugin(load: Plugin | PluginLoadRecord) {
+  addPlugin(load: Plugin | PluginLoadRecord | RuntimePluginLoadRecord) {
     if (this.configured) {
       throw new Error('JBrowse already configured, cannot add plugins')
     }
-    const [plugin, metadata] =
+    const [plugin, metadata = {}] =
       load instanceof Plugin ? [load, {}] : [load.plugin, load.metadata]
 
     if (this.plugins.includes(plugin)) {
       throw new Error('plugin already installed')
     }
-    this.pluginMetaData[plugin.name] = metadata
+
+    this.pluginMetadata[plugin.name] = metadata
+    if ('definition' in load) {
+      this.runtimePluginDefinitions.push(load.definition)
+    }
     plugin.install(this)
     this.plugins.push(plugin)
     return this
@@ -237,7 +247,9 @@ export default class PluginManager {
   }
 
   configure() {
-    if (this.configured) throw new Error('already configured')
+    if (this.configured) {
+      throw new Error('already configured')
+    }
 
     this.plugins.forEach(plugin => plugin.configure(this))
 
@@ -364,7 +376,9 @@ export default class PluginManager {
   lib = ReExports
 
   load = <FTYPE extends AnyFunction>(lib: FTYPE): ReturnType<FTYPE> => {
-    if (!this.jbrequireCache.has(lib)) this.jbrequireCache.set(lib, lib(this))
+    if (!this.jbrequireCache.has(lib)) {
+      this.jbrequireCache.set(lib, lib(this))
+    }
     return this.jbrequireCache.get(lib)
   }
 
@@ -392,7 +406,9 @@ export default class PluginManager {
       return this.load(lib)
     }
 
-    if (lib.default) return this.jbrequire(lib.default)
+    if (lib.default) {
+      return this.jbrequire(lib.default)
+    }
 
     throw new TypeError(
       'lib passed to jbrequire must be either a string or a function',

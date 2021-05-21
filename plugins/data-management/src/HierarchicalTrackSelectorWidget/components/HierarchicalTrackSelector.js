@@ -1,8 +1,9 @@
-/* eslint-disable react/prop-types,no-nested-ternary,jsx-a11y/no-static-element-interactions,jsx-a11y/click-events-have-key-events */
+/* eslint-disable react/prop-types */
 import React, {
   Suspense,
   lazy,
   useCallback,
+  useMemo,
   useState,
   useRef,
   useEffect,
@@ -203,10 +204,13 @@ const HierarchicalTree = observer(({ height, tree, model }) => {
   const session = getSession(model)
   const { filterText } = model
 
-  const extra = {
-    onChange: trackId => model.view.toggleTrack(trackId),
-    onMoreInfo: setMoreInfo,
-  }
+  const extra = useMemo(
+    () => ({
+      onChange: trackId => model.view.toggleTrack(trackId),
+      onMoreInfo: setMoreInfo,
+    }),
+    [model.view],
+  )
   const treeWalker = useCallback(
     function* treeWalker() {
       for (let i = 0; i < tree.children.length; i++) {

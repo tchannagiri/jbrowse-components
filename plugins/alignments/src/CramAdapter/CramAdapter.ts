@@ -75,6 +75,7 @@ export default class CramAdapter extends BaseFeatureDataAdapter {
         `CRAM feature adapters cannot use sequence adapters of type '${sequenceAdapterType}'`,
       )
     }
+    return { sequenceAdapter: this.sequenceAdapter }
   }
 
   async getHeader(opts?: BaseOptions) {
@@ -86,9 +87,13 @@ export default class CramAdapter extends BaseFeatureDataAdapter {
     start -= 1 // convert from 1-based closed to interbase
 
     const refSeqStore = this.sequenceAdapter
-    if (!refSeqStore) return undefined
+    if (!refSeqStore) {
+      return undefined
+    }
     const refName = this.refIdToOriginalName(seqId) || this.refIdToName(seqId)
-    if (!refName) return undefined
+    if (!refName) {
+      return undefined
+    }
 
     const features = refSeqStore.getFeatures(
       {

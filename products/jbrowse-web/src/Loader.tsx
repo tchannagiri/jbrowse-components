@@ -1,11 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { lazy, useEffect, useState, Suspense } from 'react'
 import PluginManager, { PluginLoadRecord } from '@jbrowse/core/PluginManager'
-import PluginLoader, { PluginDefinition } from '@jbrowse/core/PluginLoader'
+import PluginLoader, {
+  PluginDefinition,
+  PluginRecord,
+} from '@jbrowse/core/PluginLoader'
 import { observer } from 'mobx-react'
 import { inDevelopment, fromUrlSafeB64 } from '@jbrowse/core/util'
 import { openLocation } from '@jbrowse/core/util/io'
-import ErrorBoundary from 'react-error-boundary'
+import { ErrorBoundary } from 'react-error-boundary'
 import {
   StringParam,
   QueryParamProvider,
@@ -36,7 +39,6 @@ import factoryReset from './factoryReset'
 
 const SessionWarningDialog = lazy(() => import('./SessionWarningDialog'))
 const ConfigWarningDialog = lazy(() => import('./ConfigWarningDialog'))
-
 const StartScreen = lazy(() => import('./StartScreen'))
 
 function NoConfigMessage() {
@@ -52,6 +54,7 @@ function NoConfigMessage() {
     ['test_data/config_many_contigs.json', 'Many contigs'],
     ['test_data/config_honeybee.json', 'Honeybee'],
     ['test_data/config_wormbase.json', 'Wormbase'],
+    ['test_data/wgbs/config.json', 'WGBS methylation'],
   ]
   return (
     <div>
@@ -103,6 +106,20 @@ function NoConfigMessage() {
   )
 }
 
+async function checkPlugins(pluginsToCheck: { url: string }[]) {
+  const fetchResult = await fetch(
+    'https://jbrowse.org/plugin-store/plugins.json',
+  )
+  if (!fetchResult.ok) {
+    throw new Error('Failed to fetch plugin data')
+  }
+  const array = (await fetchResult.json()) as {
+    plugins: { url: string }[]
+  }
+  const allowedPluginUrls = array.plugins.map(p => p.url)
+  return pluginsToCheck.every(p => allowedPluginUrls.includes(p.url))
+}
+
 type Config = SnapshotOut<AnyConfigurationModel>
 
 const SessionLoader = types
@@ -118,7 +135,8 @@ const SessionLoader = types
     shareWarningOpen: false as any,
     configSnapshot: undefined as any,
     sessionSnapshot: undefined as any,
-    runtimePlugins: [] as PluginConstructor[],
+    runtimePlugins: [] as PluginRecord[],
+    sessionPlugins: [] as PluginRecord[],
     sessionError: undefined as Error | undefined,
     configError: undefined as Error | undefined,
     bc1:
@@ -172,20 +190,28 @@ const SessionLoader = types
     setSessionError(error: Error) {
       self.sessionError = error
     },
-    setRuntimePlugins(plugins: PluginConstructor[]) {
+    setRuntimePlugins(plugins: PluginRecord[]) {
       self.runtimePlugins = plugins
+    },
+    setSessionPlugins(plugins: PluginRecord[]) {
+      self.sessionPlugins = plugins
     },
     setConfigSnapshot(snap: unknown) {
       self.configSnapshot = snap
     },
-    setSessionSnapshot(snap: unknown) {
-      self.sessionSnapshot = snap
-    },
+
     setBlankSession(flag: boolean) {
       self.blankSession = flag
     },
-    setSessionTriaged(args?: { snap: unknown; origin: string }) {
+    setSessionTriaged(args?: {
+      snap: unknown
+      origin: string
+      reason: { url: string }[]
+    }) {
       self.sessionTriaged = args
+    },
+    setSessionSnapshotSuccess(snap: unknown) {
+      self.sessionSnapshot = snap
     },
   }))
   .actions(self => ({
@@ -200,26 +226,67 @@ const SessionLoader = types
         self.setConfigError(e)
       }
     },
-    async fetchConfig() {
+    async fetchSessionPlugins(snap: { sessionPlugins?: PluginDefinition[] }) {
       try {
-        const configLocation = {
-          uri: self.configPath || 'config.json',
-        }
-        const location = openLocation(configLocation)
-        const configText = (await location.readFile('utf8')) as string
-        const config = JSON.parse(configText)
-        const configUri = new URL(configLocation.uri, window.location.href)
-        addRelativeUris(config, configUri)
-        // cross origin config check
-        if (configUri.hostname !== window.location.hostname) {
-          self.setSessionTriaged({ snap: config, origin: 'config' })
+        const pluginLoader = new PluginLoader(snap.sessionPlugins || [])
+        pluginLoader.installGlobalReExports(window)
+        const plugins = await pluginLoader.load()
+        self.setSessionPlugins([...plugins])
+      } catch (e) {
+        console.error(e)
+        self.setConfigError(e)
+      }
+    },
+
+    // passed
+    async setSessionSnapshot(
+      snap: { sessionPlugins?: PluginDefinition[] },
+      userAcceptedConfirmation?: boolean,
+    ) {
+      try {
+        const { sessionPlugins = [] } = snap
+        const sessionPluginsAllowed = await checkPlugins(sessionPlugins)
+        if (sessionPluginsAllowed || userAcceptedConfirmation) {
+          await this.fetchSessionPlugins(snap)
+          self.setSessionSnapshotSuccess(snap)
         } else {
-          await this.fetchPlugins(config)
-          self.setConfigSnapshot(config)
+          self.setSessionTriaged({
+            snap,
+            origin: 'session',
+            reason: sessionPlugins,
+          })
         }
       } catch (e) {
         console.error(e)
         self.setConfigError(e)
+      }
+    },
+
+    async fetchConfig() {
+      const { configPath = 'config.json' } = self
+      const config = JSON.parse(
+        (await openLocation({ uri: configPath }).readFile('utf8')) as string,
+      )
+      const configUri = new URL(configPath, window.location.href)
+      addRelativeUris(config, configUri)
+
+      // cross origin config check
+      if (configUri.hostname !== window.location.hostname) {
+        const configPlugins = config.plugins || []
+        const configPluginsAllowed = await checkPlugins(configPlugins)
+        if (!configPluginsAllowed) {
+          self.setSessionTriaged({
+            snap: config,
+            origin: 'config',
+            reason: configPlugins,
+          })
+        } else {
+          await this.fetchPlugins(config)
+          self.setConfigSnapshot(config)
+        }
+      } else {
+        await this.fetchPlugins(config)
+        self.setConfigSnapshot(config)
       }
     },
 
@@ -231,7 +298,7 @@ const SessionLoader = types
       if (sessionStr) {
         const sessionSnap = JSON.parse(sessionStr).session || {}
         if (query === sessionSnap.id) {
-          self.setSessionSnapshot(sessionSnap)
+          await this.setSessionSnapshot(sessionSnap)
           return
         }
       }
@@ -249,14 +316,14 @@ const SessionLoader = types
         try {
           const result = await resultP
           // @ts-ignore
-          self.setSessionSnapshot({ ...result, id: shortid() })
+          await self.setSessionSnapshot({ ...result, id: shortid() })
           return
         } catch (e) {
           // the broadcast channels did not find the session in another tab
           // clear session param, so just ignore
         }
       }
-      self.setSessionError(new Error('Local storage session not found'))
+      throw new Error('Local storage session not found')
     },
 
     async fetchSharedSession() {
@@ -277,7 +344,8 @@ const SessionLoader = types
       )
 
       const session = JSON.parse(fromUrlSafeB64(decryptedSession))
-      self.setSessionSnapshot({ ...session, id: shortid() })
+
+      await this.setSessionSnapshot({ ...session, id: shortid() })
     },
 
     async decodeEncodedUrlSession() {
@@ -285,13 +353,13 @@ const SessionLoader = types
         // @ts-ignore
         fromUrlSafeB64(self.sessionQuery.replace('encoded-', '')),
       )
-      self.setSessionSnapshot({ ...session, id: shortid() })
+      await this.setSessionSnapshot({ ...session, id: shortid() })
     },
 
     async decodeJsonUrlSession() {
       // @ts-ignore
       const session = JSON.parse(self.sessionQuery.replace('json-', ''))
-      self.setSessionSnapshot({ ...session, id: shortid() })
+      await this.setSessionSnapshot({ ...session.session, id: shortid() })
     },
 
     async afterCreate() {
@@ -313,6 +381,7 @@ const SessionLoader = types
         // fetch config
         await this.fetchConfig()
       } catch (e) {
+        console.error(e)
         self.setConfigError(e)
         return
       }
@@ -359,7 +428,11 @@ const SessionLoader = types
     },
   }))
 
-export function Loader({ initialTimestamp }: { initialTimestamp: number }) {
+export function Loader({
+  initialTimestamp = Date.now(),
+}: {
+  initialTimestamp?: number
+}) {
   // return value if defined, else convert null to undefined for use with
   // types.maybe
   const load = (param: string | null | undefined) =>
@@ -406,6 +479,7 @@ const Renderer = observer(
       try {
         const {
           runtimePlugins,
+          sessionPlugins,
           adminKey,
           configSnapshot,
           sessionSnapshot,
@@ -423,7 +497,14 @@ const Renderer = observer(
                 metadata: { isCore: true },
               } as PluginLoadRecord
             }),
-            ...runtimePlugins.map(P => new P()),
+            ...runtimePlugins.map(({ plugin: P, definition }) => ({
+              plugin: new P(),
+              definition,
+            })),
+            ...sessionPlugins.map(({ plugin: P, definition }) => ({
+              plugin: new P(),
+              definition,
+            })),
           ])
           pluginManager.createPluggableElements()
 
@@ -586,17 +667,23 @@ const Renderer = observer(
       return loader.sessionTriaged.origin === 'session' ? (
         <Suspense fallback={<div />}>
           <SessionWarningDialog
-            onConfirm={() => {
+            onConfirm={async () => {
               const session = JSON.parse(
                 JSON.stringify(loader.sessionTriaged.snap),
               )
-              loader.setSessionSnapshot({ ...session, id: shortid() })
+
+              // second param true says we passed user confirmation
+              await loader.setSessionSnapshot(
+                { ...session, id: shortid() },
+                true,
+              )
               handleClose()
             }}
             onCancel={() => {
               loader.setBlankSession(true)
               handleClose()
             }}
+            reason={loader.sessionTriaged.reason}
           />
         </Suspense>
       ) : (
@@ -614,6 +701,7 @@ const Renderer = observer(
               factoryReset()
               handleClose()
             }}
+            reason={loader.sessionTriaged.reason}
           />
         </Suspense>
       )
@@ -653,7 +741,7 @@ const PlatformSpecificFatalErrorDialog = (props: unknown) => {
     />
   )
 }
-export default ({ initialTimestamp }: { initialTimestamp: number }) => {
+const LoaderWrapper = ({ initialTimestamp }: { initialTimestamp: number }) => {
   return (
     <ErrorBoundary FallbackComponent={PlatformSpecificFatalErrorDialog}>
       <QueryParamProvider>
@@ -662,5 +750,7 @@ export default ({ initialTimestamp }: { initialTimestamp: number }) => {
     </ErrorBoundary>
   )
 }
+
+export default LoaderWrapper
 
 export type SessionLoader = Instance<typeof SessionLoader>

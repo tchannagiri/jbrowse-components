@@ -47,8 +47,12 @@ function RecentSessionCard({
 
   const handleMenuClose = action => {
     setMenuAnchorEl(null)
-    if (action === 'delete') return onDelete(sessionName)
-    if (action === 'rename') return onRename(sessionName)
+    if (action === 'delete') {
+      return onDelete(sessionName)
+    }
+    if (action === 'rename') {
+      return onRename(sessionName)
+    }
     return undefined
   }
 
@@ -84,7 +88,7 @@ function RecentSessionCard({
               style={{ width: 178 }}
             >
               Last modified{' '}
-              {new Date(sessionStats.mtimeMs).toLocaleDateString(undefined, {
+              {new Date(sessionStats?.mtimeMs).toLocaleDateString(undefined, {
                 dateStyle: 'medium',
               })}
             </Typography>
