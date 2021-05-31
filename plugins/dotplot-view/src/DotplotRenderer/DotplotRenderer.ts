@@ -47,11 +47,11 @@ export default class DotplotRenderer extends ComparativeServerSideRendererType {
       const refName = feature.get('refName')
       const mate = feature.get('mate')
       const mateRef = mate.refName
-      // const identity = feature.get('numMatches') / feature.get('blockLen')
-      // ctx.fillStyle = `hsl(${identity * 150},50%,50%)`
-      const color = readConfObject(config, 'color', { feature })
-      ctx.fillStyle = color
-      ctx.strokeStyle = color
+      const identity = feature.get('meanScore') //feature.get('numMatches') / feature.get('blockLen')
+      ctx.fillStyle = `hsl(${identity * 200},80%,45%)`
+      // const color = readConfObject(config, 'color', { feature })
+      // ctx.fillStyle = color
+      // ctx.strokeStyle = color
       const b10 = hview.bpToPx({ refName, coord: start })
       const b20 = hview.bpToPx({ refName, coord: end })
       const e10 = vview.bpToPx({ refName: mateRef, coord: mate.start })

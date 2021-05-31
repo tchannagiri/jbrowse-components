@@ -25,7 +25,25 @@ interface PafRecord {
     mappingQual: number
     numMatches: number
     strand: string
+    meanScore?: number
   }
+}
+
+function zip(a: number[], b: number[]): [number, number][] {
+  return a.map(function (e, i) {
+    return [e, b[i]]
+  })
+}
+//https://gist.github.com/stekhn/a12ed417e91f90ecec14bcfa4c2ae16a
+function weightedMean(tuples: [number, number][]) {
+  const [valueSum, weightSum] = tuples.reduce(
+    ([valueSum, weightSum], [value, weight]) => [
+      valueSum + value * weight,
+      weightSum + weight,
+    ],
+    [0, 0],
+  )
+  return valueSum / weightSum
 }
 
 export default class PAFAdapter extends BaseFeatureDataAdapter {
@@ -50,14 +68,15 @@ export default class PAFAdapter extends BaseFeatureDataAdapter {
     this.assemblyNames = assemblyNames
   }
 
-  async setup(opts?: BaseOptions) {
+  async setup(opts?: BaseOptions): Promise<PafRecord[]> {
     const text = (await this.pafLocation.readFile({
       encoding: 'utf8',
       ...opts,
     })) as string
-    const pafRecords: PafRecord[] = []
-    text.split('\n').forEach((line: string, index: number) => {
-      if (line.length) {
+    const ret = text
+      .split('\n')
+      .filter(f => !!f)
+      .map(line => {
         const [
           chr1,
           queryRefSeqLen,
@@ -83,7 +102,7 @@ export default class PAFAdapter extends BaseFeatureDataAdapter {
           }),
         )
 
-        pafRecords[index] = {
+        return {
           records: [
             { refName: chr1, start: +start1, end: +end1 },
             { refName: chr2, start: +start2, end: +end2 },
@@ -95,10 +114,52 @@ export default class PAFAdapter extends BaseFeatureDataAdapter {
             mappingQual: +mappingQual,
             ...rest,
           },
-        }
+        } as PafRecord
+      })
+
+    const scoreMap: { [key: string]: { quals: number[]; len: number[] } } = {}
+    for (let i = 0; i < ret.length; i++) {
+      const entry = ret[i]
+      const query = entry.records[0].refName
+      const target = entry.records[1].refName
+      const key = query + '-' + target
+      if (!scoreMap[key]) {
+        scoreMap[key] = { quals: [], len: [] }
       }
-    })
-    return pafRecords
+      scoreMap[key].quals.push(entry.extra.mappingQual)
+      scoreMap[key].len.push(entry.extra.blockLen)
+    }
+
+    const meanScoreMap = Object.fromEntries(
+      Object.entries(scoreMap).map(([key, val]) => {
+        const vals = zip(val.quals, val.len)
+        return [key, weightedMean(vals)]
+      }),
+    )
+    for (let i = 0; i < ret.length; i++) {
+      const entry = ret[i]
+      const query = entry.records[0].refName
+      const target = entry.records[1].refName
+      const key = query + '-' + target
+      entry.extra.meanScore = meanScoreMap[key]
+    }
+
+    let min = 10000
+    let max = 0
+    for (let i = 0; i < ret.length; i++) {
+      const entry = ret[i]
+      min = Math.min(entry.extra.meanScore, min)
+      max = Math.max(entry.extra.meanScore, max)
+    }
+    console.log({ min, max })
+    for (let i = 0; i < ret.length; i++) {
+      const entry = ret[i]
+      const b = entry.extra.meanScore
+      entry.extra.meanScore = (entry.extra.meanScore - min) / (max - min)
+      // console.log(b, entry.extra.meanScore)
+    }
+
+    return ret
   }
 
   async hasDataForRefName() {
