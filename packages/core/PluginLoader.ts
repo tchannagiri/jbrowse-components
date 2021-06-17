@@ -1,5 +1,4 @@
 /* eslint-disable no-restricted-globals */
-import url from 'url'
 import domLoadScript from 'load-script2'
 
 import { PluginConstructor } from './Plugin'
@@ -22,7 +21,6 @@ export const PluginSourceConfigurationSchema = ConfigurationSchema(
 )
 
 export interface PluginDefinition {
-  name?: string
   url: string
 }
 
@@ -61,34 +59,16 @@ export default class PluginLoader {
   }
 
   async loadPlugin(definition: PluginDefinition): Promise<PluginConstructor> {
-    const parsedUrl = url.parse(definition.url)
-    if (
-      !parsedUrl.protocol ||
-      parsedUrl.protocol === 'http:' ||
-      parsedUrl.protocol === 'https:'
-    ) {
-      await this.loadScript(definition.url)
-      const moduleName = definition.name
-      const umdName = `JBrowsePlugin${moduleName}`
-      // Based on window-or-global
-      // https://github.com/purposeindustries/window-or-global/blob/322abc71de0010c9e5d9d0729df40959e1ef8775/lib/index.js
-      const scope =
-        (typeof self === 'object' && self.self === self && self) ||
-        (typeof global === 'object' && global.global === global && global) ||
-        this
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const plugin = (scope as any)[umdName] as { default: PluginConstructor }
-      if (!plugin) {
-        throw new Error(
-          `plugin ${moduleName} failed to load, ${scope.constructor.name}.${umdName} is undefined`,
-        )
-      }
-
-      return plugin.default
+    const parsedUrl = new URL(definition.url)
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      throw new Error(
+        `cannot load plugins using protocol "${parsedUrl.protocol}"`,
+      )
     }
-    throw new Error(
-      `cannot load plugins using protocol "${parsedUrl.protocol}"`,
-    )
+    const plugin = (await import(/* webpackIgnore: true */ parsedUrl.href)) as {
+      default: PluginConstructor
+    }
+    return plugin.default
   }
 
   installGlobalReExports(target: WindowOrWorkerGlobalScope | NodeJS.Global) {
