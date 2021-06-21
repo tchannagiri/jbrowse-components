@@ -116,7 +116,7 @@ export default class ServerSideRenderer extends RendererType {
    * @param args - the converted arguments to modify
    */
   deserializeArgsInWorker(args: RenderArgsSerialized): RenderArgsDeserialized {
-    const deserialized = ({ ...args } as unknown) as RenderArgsDeserialized
+    const deserialized = { ...args } as unknown as RenderArgsDeserialized
     const config = this.configSchema.create(args.config || {}, {
       pluginManager: this.pluginManager,
     })
@@ -157,9 +157,11 @@ export default class ServerSideRenderer extends RendererType {
    * @param args - render args
    */
   async renderInClient(rpcManager: RpcManager, args: RenderArgs) {
-    return rpcManager.call(args.sessionId, 'CoreRender', args) as Promise<
-      ResultsSerialized
-    >
+    return rpcManager.call(
+      args.sessionId,
+      'CoreRender',
+      args,
+    ) as Promise<ResultsSerialized>
   }
 
   /**

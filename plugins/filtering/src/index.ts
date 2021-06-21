@@ -12,9 +12,8 @@ export default class extends Plugin {
 
   install(pluginManager: PluginManager) {
     pluginManager.addDisplayType(() => {
-      const configSchema = linearFilteringDisplayConfigSchemaFactory(
-        pluginManager,
-      )
+      const configSchema =
+        linearFilteringDisplayConfigSchemaFactory(pluginManager)
       return new DisplayType({
         name: 'LinearFilteringDisplay',
         configSchema,

@@ -147,12 +147,18 @@ export default class BreakpointSplitRenderer extends ComparativeServerSideRender
       // following x1,y1 -> x2,y2
       chunk.sort((a, b) => a.feature.get('clipPos') - b.feature.get('clipPos'))
       for (let i = 0; i < chunk.length - 1; i += 1) {
-        const { layout: c1, feature: f1, level: level1, refName: ref1 } = chunk[
-          i
-        ]
-        const { layout: c2, feature: f2, level: level2, refName: ref2 } = chunk[
-          i + 1
-        ]
+        const {
+          layout: c1,
+          feature: f1,
+          level: level1,
+          refName: ref1,
+        } = chunk[i]
+        const {
+          layout: c2,
+          feature: f2,
+          level: level2,
+          refName: ref2,
+        } = chunk[i + 1]
         const v1 = views[level1]
         const v2 = views[level2]
 

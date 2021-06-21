@@ -36,9 +36,8 @@ function PileupRendering(props: {
   const [region] = regions
   const highlightOverlayCanvas = useRef<HTMLCanvasElement>(null)
   const [mouseIsDown, setMouseIsDown] = useState(false)
-  const [movedDuringLastMouseDown, setMovedDuringLastMouseDown] = useState(
-    false,
-  )
+  const [movedDuringLastMouseDown, setMovedDuringLastMouseDown] =
+    useState(false)
   useEffect(() => {
     const canvas = highlightOverlayCanvas.current
     if (!canvas) {

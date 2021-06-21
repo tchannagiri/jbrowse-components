@@ -34,9 +34,8 @@ export default function Loader({
 }: {
   initialTimestamp: number
 }) {
-  const [configSnapshot, setConfigSnapshot] = useState<
-    SnapshotIn<AnyConfigurationModel>
-  >()
+  const [configSnapshot, setConfigSnapshot] =
+    useState<SnapshotIn<AnyConfigurationModel>>()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [plugins, setPlugins] = useState<any[]>([])
   const classes = useStyles()

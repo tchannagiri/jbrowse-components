@@ -173,9 +173,8 @@ function SvgFeatureRendering(props) {
 
   const ref = useRef()
   const [mouseIsDown, setMouseIsDown] = useState(false)
-  const [movedDuringLastMouseDown, setMovedDuringLastMouseDown] = useState(
-    false,
-  )
+  const [movedDuringLastMouseDown, setMovedDuringLastMouseDown] =
+    useState(false)
   const [height, setHeight] = useState(0)
   const {
     onMouseOut,

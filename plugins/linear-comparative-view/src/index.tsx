@@ -561,9 +561,8 @@ export default class extends Plugin {
       })
     })
     pluginManager.addDisplayType(() => {
-      const configSchema = linearComparativeDisplayConfigSchemaFactory(
-        pluginManager,
-      )
+      const configSchema =
+        linearComparativeDisplayConfigSchemaFactory(pluginManager)
       return new DisplayType({
         name: 'LinearComparativeDisplay',
         configSchema,
@@ -574,9 +573,8 @@ export default class extends Plugin {
       })
     })
     pluginManager.addDisplayType(() => {
-      const configSchema = linearSyntenyDisplayConfigSchemaFactory(
-        pluginManager,
-      )
+      const configSchema =
+        linearSyntenyDisplayConfigSchemaFactory(pluginManager)
       return new DisplayType({
         name: 'LinearSyntenyDisplay',
         configSchema,

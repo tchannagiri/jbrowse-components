@@ -27,9 +27,8 @@ interface Menu {
 }
 
 export default function RootModel(pluginManager: PluginManager) {
-  const { assemblyConfigSchemas, dispatcher } = AssemblyConfigSchemasFactory(
-    pluginManager,
-  )
+  const { assemblyConfigSchemas, dispatcher } =
+    AssemblyConfigSchemasFactory(pluginManager)
   const assemblyConfigSchemasType = types.union(
     { dispatcher },
     ...assemblyConfigSchemas,

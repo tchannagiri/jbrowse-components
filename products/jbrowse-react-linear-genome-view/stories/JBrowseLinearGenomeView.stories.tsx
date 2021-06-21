@@ -147,8 +147,7 @@ export const WithPlugins = () => {
       const loadedPlugins = await loadPlugins([
         {
           name: 'UCSC',
-          url:
-            'https://unpkg.com/jbrowse-plugin-ucsc@^1/dist/jbrowse-plugin-ucsc.umd.production.min.js',
+          url: 'https://unpkg.com/jbrowse-plugin-ucsc@^1/dist/jbrowse-plugin-ucsc.umd.production.min.js',
         },
       ])
       setPlugins(loadedPlugins)
@@ -184,8 +183,7 @@ export const WithPlugins = () => {
         adapter: {
           type: 'RefNameAliasAdapter',
           location: {
-            uri:
-              'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/hg19_aliases.txt',
+            uri: 'https://s3.amazonaws.com/jbrowse.org/genomes/hg19/hg19_aliases.txt',
           },
         },
       },

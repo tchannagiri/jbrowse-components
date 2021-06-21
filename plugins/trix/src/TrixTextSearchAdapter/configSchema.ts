@@ -1,17 +1,17 @@
 import { ConfigurationSchema } from '@jbrowse/core/configuration'
 
 export default ConfigurationSchema(
-  'TrixxTextSearchAdapter',
+  'TrixTextSearchAdapter',
   {
     ixFilePath: {
       type: 'fileLocation',
       defaultValue: { uri: 'out.ix' },
-      description: 'the location of the trixx ix file',
+      description: 'the location of the trix ix file',
     },
     ixxFilePath: {
       type: 'fileLocation',
       defaultValue: { uri: 'out.ixx' },
-      description: 'the location of the trixx ixx file',
+      description: 'the location of the trix ixx file',
     },
     tracks: {
       type: 'stringArray',

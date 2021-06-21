@@ -18,10 +18,9 @@ function AdminComponent({ pluginManager }: { pluginManager: PluginManager }) {
     throw new Error('Data Management plugin must be installed')
   }
 
-  const {
-    AssemblyManager,
-    SetDefaultSession,
-  } = (DataManagementPlugin as DataManagementPluginType).exports
+  const { AssemblyManager, SetDefaultSession } = (
+    DataManagementPlugin as DataManagementPluginType
+  ).exports
 
   const {
     isAssemblyEditing,

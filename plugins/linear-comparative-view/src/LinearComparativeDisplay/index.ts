@@ -46,7 +46,7 @@ export function stateModelFactory(configSchema: any) {
       reactElement: undefined as React.ReactElement | undefined,
       message: undefined as string | undefined,
       renderingComponent: undefined as any,
-      ReactComponent2: (ServerSideRenderedBlockContent as unknown) as React.FC,
+      ReactComponent2: ServerSideRenderedBlockContent as unknown as React.FC,
     }))
     .views(self => ({
       get rendererTypeName() {
@@ -135,10 +135,8 @@ function renderBlockData(self: LinearComparativeDisplay) {
   const { rpcManager } = getSession(self) as any
   const display = self
 
-  const {
-    renderProps,
-    rendererType,
-  }: { renderProps: any; rendererType: any } = display
+  const { renderProps, rendererType }: { renderProps: any; rendererType: any } =
+    display
 
   // Alternative to readConfObject(config) is below
   // used because renderProps is something under our control.

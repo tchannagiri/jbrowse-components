@@ -15,9 +15,8 @@ describe('JBrowse model', () => {
       .createPluggableElements()
       .configure()
 
-    const { assemblyConfigSchemas, dispatcher } = AssemblyConfigSchemasFactory(
-      pluginManager,
-    )
+    const { assemblyConfigSchemas, dispatcher } =
+      AssemblyConfigSchemasFactory(pluginManager)
     const assemblyConfigSchemasType = types.union(
       { dispatcher },
       ...assemblyConfigSchemas,

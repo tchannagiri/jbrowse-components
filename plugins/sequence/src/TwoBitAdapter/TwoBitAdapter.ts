@@ -14,7 +14,8 @@ import configSchema from './configSchema'
 
 export default class TwoBitAdapter
   extends BaseFeatureDataAdapter
-  implements SequenceAdapter {
+  implements SequenceAdapter
+{
   private twobit: typeof TwoBitFile
 
   constructor(config: Instance<typeof configSchema>) {

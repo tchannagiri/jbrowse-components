@@ -48,9 +48,8 @@ export default (pluginManager: PluginManager) => {
             const adapterFromCache = this.adapterCache.get(adapterId)
             adaptersToUse.push(adapterFromCache)
           } else {
-            const textSearchAdapterType = pluginManager.getTextSearchAdapterType(
-              adapterConfig.type,
-            )
+            const textSearchAdapterType =
+              pluginManager.getTextSearchAdapterType(adapterConfig.type)
             const textSearchAdapter = new textSearchAdapterType.AdapterClass(
               adapterConfig,
             ) as BaseTextSearchAdapter

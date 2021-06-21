@@ -19,7 +19,8 @@ export interface TooManyHits {
 export type NamesIndexRecord = string | Array<string | number>
 export default class JBrowse1TextSearchAdapter
   extends BaseAdapter
-  implements BaseTextSearchAdapter {
+  implements BaseTextSearchAdapter
+{
   /*
   Jbrowse1 text search adapter
   Uses index built by generate-names.pl

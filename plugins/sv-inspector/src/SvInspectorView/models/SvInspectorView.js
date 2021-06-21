@@ -45,9 +45,8 @@ function defaultOnChordClick(feature, chordTrack, pluginManager) {
 const SvInspectorViewF = pluginManager => {
   const { jbrequire } = pluginManager
   const { autorun, reaction } = pluginManager.lib.mobx
-  const { types, getParent, addDisposer, getSnapshot } = pluginManager.lib[
-    'mobx-state-tree'
-  ]
+  const { types, getParent, addDisposer, getSnapshot } =
+    pluginManager.lib['mobx-state-tree']
   const { BaseViewModel } = jbrequire(
     '@jbrowse/core/pluggableElementTypes/models',
   )
@@ -146,9 +145,8 @@ const SvInspectorViewF = pluginManager => {
 
       // Promise<string[]> of refnames
       get featuresRefNamesP() {
-        const {
-          AdapterClass: FromConfigAdapter,
-        } = pluginManager.getAdapterType('FromConfigAdapter')
+        const { AdapterClass: FromConfigAdapter } =
+          pluginManager.getAdapterType('FromConfigAdapter')
         const adapter = new FromConfigAdapter(
           self.featuresAdapterConfigSnapshot,
         )
@@ -241,9 +239,8 @@ const SvInspectorViewF = pluginManager => {
                   }
                   if (onlyDisplayRelevantRegionsInCircularView) {
                     if (tracks.length === 1) {
-                      const {
-                        getCanonicalRefName,
-                      } = session.assemblyManager.get(assemblyName)
+                      const { getCanonicalRefName } =
+                        session.assemblyManager.get(assemblyName)
 
                       featuresRefNamesP
                         .then(featureRefNames => {
