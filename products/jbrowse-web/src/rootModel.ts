@@ -1,33 +1,38 @@
-import assemblyManagerFactory, {
-  assemblyConfigSchemas as AssemblyConfigSchemasFactory,
-} from '@jbrowse/core/assemblyManager'
-import PluginManager from '@jbrowse/core/PluginManager'
-import RpcManager from '@jbrowse/core/rpc/RpcManager'
-import { MenuItem } from '@jbrowse/core/ui'
-import { AbstractSessionModel } from '@jbrowse/core/util'
-import AddIcon from '@material-ui/icons/Add'
-import SettingsIcon from '@material-ui/icons/Settings'
-import AppsIcon from '@material-ui/icons/Apps'
 import {
   addDisposer,
   cast,
   getSnapshot,
   getParent,
-  SnapshotIn,
-  types,
-  IAnyStateTreeNode,
-  Instance,
   getType,
+  getPropertyMembers,
+  getChildType,
+  IAnyStateTreeNode,
+  IAnyType,
+  Instance,
   isArrayType,
   isModelType,
   isReferenceType,
   isValidReference,
-  getPropertyMembers,
   isMapType,
-  getChildType,
-  IAnyType,
+  SnapshotIn,
+  types,
 } from 'mobx-state-tree'
 import { observable, autorun } from 'mobx'
+// jbrowse
+import assemblyManagerFactory, {
+  assemblyConfigSchemas as AssemblyConfigSchemasFactory,
+} from '@jbrowse/core/assemblyManager'
+import PluginManager from '@jbrowse/core/PluginManager'
+import RpcManager from '@jbrowse/core/rpc/RpcManager'
+import TextSearchManagerF from '@jbrowse/core/TextSearch/TextSearchManager'
+import { AbstractSessionModel } from '@jbrowse/core/util'
+// material ui
+import { MenuItem } from '@jbrowse/core/ui'
+import AddIcon from '@material-ui/icons/Add'
+import SettingsIcon from '@material-ui/icons/Settings'
+import AppsIcon from '@material-ui/icons/Apps'
+
+// other
 import corePlugins from './corePlugins'
 import jbrowseWebFactory from './jbrowseModel'
 // @ts-ignore
@@ -107,6 +112,7 @@ export default function RootModel(
     assemblyConfigSchemasType,
     pluginManager,
   )
+  const TextSearchManager = pluginManager.load(TextSearchManagerF)
   return types
     .model('Root', {
       jbrowse: jbrowseWebFactory(
@@ -121,8 +127,18 @@ export default function RootModel(
       isAssemblyEditing: false,
       isDefaultSessionEditing: false,
     })
-    .volatile(() => ({
+    .volatile(self => ({
+      pluginsUpdated: false,
+      rpcManager: new RpcManager(
+        pluginManager,
+        self.jbrowse.configuration.rpc,
+        {
+          WebWorkerRpcDriver: { WorkerClass: RenderWorker },
+          MainThreadRpcDriver: {},
+        },
+      ),
       savedSessionsVolatile: observable.map({}),
+      textSearchManager: new TextSearchManager(),
       pluginManager,
       error: undefined as undefined | Error,
     }))
@@ -168,14 +184,12 @@ export default function RootModel(
         addDisposer(
           self,
           autorun(() => {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             for (const [_, val] of self.savedSessionsVolatile.entries()) {
               try {
                 const key = self.localStorageId(val.name)
                 localStorage.setItem(key, JSON.stringify({ session: val }))
               } catch (e) {
                 if (e.code === '22' || e.code === '1024') {
-                  // eslint-disable-next-line no-alert
                   alert(
                     'Local storage is full! Please use the "Open sessions" panel to remove old sessions',
                   )
@@ -205,6 +219,11 @@ export default function RootModel(
                     },
                   }),
                 )
+                if (self.pluginsUpdated) {
+                  this.setPluginsUpdated(false)
+                  // reload app to get a fresh plugin manager
+                  window.location.reload()
+                }
               }
             },
             { delay: 400 },
@@ -224,12 +243,18 @@ export default function RootModel(
             throw error
           }
         }
+        if (oldSession) {
+          this.setPluginsUpdated(true)
+        }
       },
       setAssemblyEditing(flag: boolean) {
         self.isAssemblyEditing = flag
       },
       setDefaultSessionEditing(flag: boolean) {
         self.isDefaultSessionEditing = flag
+      },
+      setPluginsUpdated(flag: boolean) {
+        self.pluginsUpdated = flag
       },
       setDefaultSession() {
         const { defaultSession } = self.jbrowse
@@ -360,15 +385,6 @@ export default function RootModel(
             ]
           : []),
       ] as Menu[],
-      rpcManager: new RpcManager(
-        pluginManager,
-        self.jbrowse.plugins,
-        self.jbrowse.configuration.rpc,
-        {
-          WebWorkerRpcDriver: { WorkerClass: RenderWorker },
-          MainThreadRpcDriver: {},
-        },
-      ),
       adminMode,
     }))
     .actions(self => ({
@@ -508,11 +524,11 @@ export default function RootModel(
     }))
 }
 
-export function createTestSession(snapshot = {}) {
+export function createTestSession(snapshot = {}, adminMode = false) {
   const pluginManager = new PluginManager(corePlugins.map(P => new P()))
   pluginManager.createPluggableElements()
 
-  const JBrowseRootModel = RootModel(pluginManager)
+  const JBrowseRootModel = RootModel(pluginManager, adminMode)
   const root = JBrowseRootModel.create(
     {
       jbrowse: {

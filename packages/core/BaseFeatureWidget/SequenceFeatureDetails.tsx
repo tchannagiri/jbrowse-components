@@ -1,4 +1,4 @@
-/* eslint-disable no-nested-ternary,react/prop-types */
+/* eslint-disable react/prop-types */
 import React, { useRef, useState, useEffect } from 'react'
 import { Button, Select, MenuItem, Typography } from '@material-ui/core'
 import { useInView } from 'react-intersection-observer'
@@ -110,7 +110,7 @@ function GenecDNA(props: {
 
       {chunks.map((chunk, index) => {
         const intron = sequence.slice(chunk.end, chunks[index + 1]?.start)
-        return (
+        return index < chunks.length - 2 ? (
           <React.Fragment key={JSON.stringify(chunk)}>
             <span
               style={{ background: chunk.type === 'CDS' ? cdsColor : utrColor }}
@@ -125,7 +125,7 @@ function GenecDNA(props: {
               </span>
             ) : null}
           </React.Fragment>
-        )
+        ) : null
       })}
 
       {downstream ? (
@@ -155,7 +155,7 @@ function calculateUTRs(cds: Feat[], exons: Feat[]) {
 
   const threeUTRs = [
     { start: lastCds.end, end: lastCdsExon.end },
-    ...exons.slice(lastCdsIdx),
+    ...exons.slice(lastCdsIdx + 1),
   ].map(elt => ({ ...elt, type: 'three_prime_UTR' }))
 
   return [...fiveUTRs, ...threeUTRs]
@@ -205,7 +205,7 @@ export const SequencePanel = React.forwardRef<
   let utr = dedupe(children.filter(sub => sub.type.match(/utr/i)))
   let exons = dedupe(children.filter(sub => sub.type === 'exon'))
 
-  if (!utr.length && cds.length) {
+  if (!utr.length && cds.length && exons.length) {
     utr = calculateUTRs(cds, exons)
   }
 
@@ -300,19 +300,21 @@ export default function SequenceFeatureDetails(props: BaseProps) {
       return () => {}
     }
     const { assemblyManager, rpcManager } = getSession(model)
-    const { assemblyNames } = model.view || { assemblyNames: [] }
-    const [assemblyName] = assemblyNames
+    const [assemblyName] = model.view?.assemblyNames || []
     async function fetchSeq(start: number, end: number, refName: string) {
       const assembly = await assemblyManager.waitForAssembly(assemblyName)
       if (!assembly) {
         throw new Error('assembly not found')
       }
-      const adapterConfig = getConf(assembly, ['sequence', 'adapter'])
       const sessionId = 'getSequence'
       const feats = await rpcManager.call(sessionId, 'CoreGetFeatures', {
-        adapterConfig,
+        adapterConfig: getConf(assembly, ['sequence', 'adapter']),
         sessionId,
-        region: { start, end, refName: assembly?.getCanonicalRefName(refName) },
+        region: {
+          start,
+          end,
+          refName: assembly.getCanonicalRefName(refName),
+        },
       })
 
       const [feat] = feats as Feature[]

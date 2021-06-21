@@ -2,19 +2,57 @@
 
 exports[`JBrowse model creates with empty snapshot 1`] = `
 Object {
+  "aggregateTextSearchAdapters": Array [],
   "assemblies": Array [],
   "configuration": Object {},
   "connections": Array [],
   "defaultSession": Object {
     "name": "New session",
   },
-  "plugins": undefined,
+  "plugins": Array [],
   "tracks": Array [],
 }
 `;
 
 exports[`JBrowse model creates with non-empty snapshot 1`] = `
 Object {
+  "aggregateTextSearchAdapters": Array [
+    Object {
+      "assemblies": Array [
+        "volvox",
+        "volvox2",
+      ],
+      "namesIndexLocation": Object {
+        "uri": "names/",
+      },
+      "textSearchAdapterId": "JBrowse1GenerateNamesAdapter",
+      "tracks": Array [
+        "bedtabix_genes",
+        "volvox_test_vcf",
+        "gff3tabix_genes",
+        "volvox_filtered_vcf",
+      ],
+      "type": "JBrowse1TextSearchAdapter",
+    },
+    Object {
+      "namesIndexLocation": Object {
+        "uri": "names/",
+      },
+      "textSearchAdapterId": "AdapterWithoutAssemblies",
+      "type": "JBrowse1TextSearchAdapter",
+    },
+    Object {
+      "assemblies": Array [
+        "volvox3",
+        "volvox4",
+      ],
+      "namesIndexLocation": Object {
+        "uri": "names/",
+      },
+      "textSearchAdapterId": "AdapterWithDiffAssemblies",
+      "type": "JBrowse1TextSearchAdapter",
+    },
+  ],
   "assemblies": Array [
     Object {
       "aliases": Array [
@@ -116,7 +154,7 @@ Object {
       },
     },
   },
-  "plugins": undefined,
+  "plugins": Array [],
   "tracks": Array [
     Object {
       "adapter": Object {
@@ -147,6 +185,16 @@ Object {
         },
       ],
       "name": "volvox structural variant test",
+      "textSearchAdapter": Object {
+        "assemblies": Array [
+          "NonExistantAssembly",
+        ],
+        "namesIndexLocation": Object {
+          "uri": "names/",
+        },
+        "textSearchAdapterId": "TrackAdapter",
+        "type": "JBrowse1TextSearchAdapter",
+      },
       "trackId": "volvox_sv_test",
       "type": "VariantTrack",
     },
@@ -1485,6 +1533,38 @@ Object {
     },
     Object {
       "adapter": Object {
+        "index": Object {
+          "location": Object {
+            "uri": "volvox.filtered.vcf.gz.tbi",
+          },
+        },
+        "type": "VcfTabixAdapter",
+        "vcfGzLocation": Object {
+          "uri": "volvox.filtered.vcf.gz",
+        },
+      },
+      "assemblyNames": Array [
+        "vvx",
+      ],
+      "category": Array [
+        "VCF",
+      ],
+      "displays": Array [
+        Object {
+          "displayId": "volvox_filtered_vcf_assembly_alias-ChordVariantDisplay",
+          "type": "ChordVariantDisplay",
+        },
+        Object {
+          "displayId": "volvox_filtered_vcf_assembly_alias-LinearVariantDisplay",
+          "type": "LinearVariantDisplay",
+        },
+      ],
+      "name": "volvox filtered vcf (with assembly alias)",
+      "trackId": "volvox_filtered_vcf_assembly_alias",
+      "type": "VariantTrack",
+    },
+    Object {
+      "adapter": Object {
         "bigBedLocation": Object {
           "uri": "volvox.bb",
         },
@@ -1574,12 +1654,12 @@ Object {
       ],
       "displays": Array [
         Object {
-          "displayId": "EA_0Jp4oPKg-LinearBasicDisplay",
+          "displayId": "Genes-LinearBasicDisplay",
           "type": "LinearBasicDisplay",
         },
       ],
       "name": "NCList genes",
-      "trackId": "EA_0Jp4oPKg",
+      "trackId": "Genes",
       "type": "FeatureTrack",
     },
     Object {
@@ -1975,6 +2055,202 @@ Object {
       "name": "volvox filtered vcf (green snp, purple indel)",
       "trackId": "variant_colors",
       "type": "VariantTrack",
+    },
+    Object {
+      "adapter": Object {
+        "bamLocation": Object {
+          "uri": "MM-chebi-volvox.bam",
+        },
+        "index": Object {
+          "location": Object {
+            "uri": "MM-chebi-volvox.bam.bai",
+          },
+        },
+        "sequenceAdapter": Object {
+          "twoBitLocation": Object {
+            "uri": "volvox.2bit",
+          },
+          "type": "TwoBitAdapter",
+        },
+        "type": "BamAdapter",
+      },
+      "assemblyNames": Array [
+        "volvox",
+      ],
+      "category": Array [
+        "Methylation",
+      ],
+      "displays": Array [
+        Object {
+          "displayId": "MM-chebi-volvox-LinearAlignmentsDisplay",
+          "type": "LinearAlignmentsDisplay",
+        },
+        Object {
+          "displayId": "MM-chebi-volvox-LinearPileupDisplay",
+          "type": "LinearPileupDisplay",
+        },
+        Object {
+          "displayId": "MM-chebi-volvox-LinearSNPCoverageDisplay",
+          "type": "LinearSNPCoverageDisplay",
+        },
+      ],
+      "name": "MM-chebi-volvox",
+      "trackId": "MM-chebi-volvox",
+      "type": "AlignmentsTrack",
+    },
+    Object {
+      "adapter": Object {
+        "bamLocation": Object {
+          "uri": "MM-double-volvox.bam",
+        },
+        "index": Object {
+          "location": Object {
+            "uri": "MM-double-volvox.bam.bai",
+          },
+        },
+        "sequenceAdapter": Object {
+          "twoBitLocation": Object {
+            "uri": "volvox.2bit",
+          },
+          "type": "TwoBitAdapter",
+        },
+        "type": "BamAdapter",
+      },
+      "assemblyNames": Array [
+        "volvox",
+      ],
+      "category": Array [
+        "Methylation",
+      ],
+      "displays": Array [
+        Object {
+          "displayId": "MM-double-volvox-LinearAlignmentsDisplay",
+          "type": "LinearAlignmentsDisplay",
+        },
+        Object {
+          "displayId": "MM-double-volvox-LinearPileupDisplay",
+          "type": "LinearPileupDisplay",
+        },
+        Object {
+          "displayId": "MM-double-volvox-LinearSNPCoverageDisplay",
+          "type": "LinearSNPCoverageDisplay",
+        },
+      ],
+      "name": "MM-double-volvox",
+      "trackId": "MM-double-volvox",
+      "type": "AlignmentsTrack",
+    },
+    Object {
+      "adapter": Object {
+        "bamLocation": Object {
+          "uri": "MM-multi-volvox.bam",
+        },
+        "index": Object {
+          "location": Object {
+            "uri": "MM-multi-volvox.bam.bai",
+          },
+        },
+        "sequenceAdapter": Object {
+          "twoBitLocation": Object {
+            "uri": "volvox.2bit",
+          },
+          "type": "TwoBitAdapter",
+        },
+        "type": "BamAdapter",
+      },
+      "assemblyNames": Array [
+        "volvox",
+      ],
+      "category": Array [
+        "Methylation",
+      ],
+      "displays": Array [
+        Object {
+          "displayId": "MM-multi-volvox-LinearAlignmentsDisplay",
+          "type": "LinearAlignmentsDisplay",
+        },
+        Object {
+          "displayId": "MM-multi-volvox-LinearPileupDisplay",
+          "type": "LinearPileupDisplay",
+        },
+        Object {
+          "displayId": "MM-multi-volvox-LinearSNPCoverageDisplay",
+          "type": "LinearSNPCoverageDisplay",
+        },
+      ],
+      "name": "MM-multi-volvox",
+      "trackId": "MM-multi-volvox",
+      "type": "AlignmentsTrack",
+    },
+    Object {
+      "adapter": Object {
+        "bamLocation": Object {
+          "uri": "MM-orient-volvox.bam",
+        },
+        "index": Object {
+          "location": Object {
+            "uri": "MM-orient-volvox.bam.bai",
+          },
+        },
+        "sequenceAdapter": Object {
+          "twoBitLocation": Object {
+            "uri": "volvox.2bit",
+          },
+          "type": "TwoBitAdapter",
+        },
+        "type": "BamAdapter",
+      },
+      "assemblyNames": Array [
+        "volvox",
+      ],
+      "category": Array [
+        "Methylation",
+      ],
+      "displays": Array [
+        Object {
+          "displayId": "MM-orient-volvox-LinearAlignmentsDisplay",
+          "type": "LinearAlignmentsDisplay",
+        },
+        Object {
+          "displayId": "MM-orient-volvox-LinearPileupDisplay",
+          "type": "LinearPileupDisplay",
+        },
+        Object {
+          "displayId": "MM-orient-volvox-LinearSNPCoverageDisplay",
+          "type": "LinearSNPCoverageDisplay",
+        },
+      ],
+      "name": "MM-orient-volvox",
+      "trackId": "MM-orient-volvox",
+      "type": "AlignmentsTrack",
+    },
+    Object {
+      "adapter": Object {
+        "gffGzLocation": Object {
+          "uri": "single_exon_gene.sorted.gff.gz",
+        },
+        "index": Object {
+          "location": Object {
+            "uri": "single_exon_gene.sorted.gff.gz.tbi",
+          },
+        },
+        "type": "Gff3TabixAdapter",
+      },
+      "assemblyNames": Array [
+        "volvox",
+      ],
+      "category": Array [
+        "Miscellaneous",
+      ],
+      "displays": Array [
+        Object {
+          "displayId": "single_exon_gene-LinearBasicDisplay",
+          "type": "LinearBasicDisplay",
+        },
+      ],
+      "name": "Single exon gene",
+      "trackId": "single_exon_gene",
+      "type": "FeatureTrack",
     },
   ],
 }

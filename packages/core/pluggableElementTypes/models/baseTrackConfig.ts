@@ -32,7 +32,16 @@ export function createBaseTrackConfig(pluginManager: PluginManager) {
         description: 'anything to add about this track',
         defaultValue: {},
       },
+      textSearchIndexingAttributes: {
+        type: 'stringArray',
+        description:
+          'list of which feature attributes to index for text searching',
+        defaultValue: ['Name', 'ID', 'Description'],
+      },
       adapter: pluginManager.pluggableConfigSchemaType('adapter'),
+      textSearchAdapter: pluginManager.pluggableConfigSchemaType(
+        'text search adapter',
+      ),
       displays: types.array(pluginManager.pluggableConfigSchemaType('display')),
       // see corresponding entry in circular-view ChordTrack
       // no config slot editor exists for this at the time being
@@ -74,7 +83,9 @@ export function createBaseTrackConfig(pluginManager: PluginManager) {
       actions: (self: any) => ({
         addDisplayConf(displayConf: { type: string; displayId: string }) {
           const { type } = displayConf
-          if (!type) throw new Error(`unknown display type ${type}`)
+          if (!type) {
+            throw new Error(`unknown display type ${type}`)
+          }
           const display = self.displays.find(
             (d: any) => d && d.displayId === displayConf.displayId,
           )

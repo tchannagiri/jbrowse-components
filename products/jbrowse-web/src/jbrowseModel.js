@@ -5,6 +5,7 @@ import {
 import RpcManager from '@jbrowse/core/rpc/RpcManager'
 import {
   getParent,
+  getRoot,
   getSnapshot,
   resolveIdentifier,
   types,
@@ -44,13 +45,20 @@ export default function JBrowseWeb(
           defaultValue: false,
         },
         theme: { type: 'frozen', defaultValue: {} },
+        logoPath: {
+          type: 'fileLocation',
+          defaultValue: { uri: '' },
+        },
         ...pluginManager.pluginConfigurationSchemas(),
       }),
-      plugins: types.frozen(),
+      plugins: types.array(types.frozen()),
       assemblies: types.array(assemblyConfigSchemasType),
       // track configuration is an array of track config schemas. multiple
       // instances of a track can exist that use the same configuration
       tracks: types.array(pluginManager.pluggableConfigSchemaType('track')),
+      aggregateTextSearchAdapters: types.array(
+        pluginManager.pluggableConfigSchemaType('text search adapter'),
+      ),
       connections: types.array(
         pluginManager.pluggableConfigSchemaType('connection'),
       ),
@@ -103,7 +111,9 @@ export default function JBrowseWeb(
       },
       addTrackConf(trackConf) {
         const { type } = trackConf
-        if (!type) throw new Error(`unknown track type ${type}`)
+        if (!type) {
+          throw new Error(`unknown track type ${type}`)
+        }
         const track = self.tracks.find(t => t.trackId === trackConf.trackId)
         if (track) {
           return track
@@ -124,7 +134,9 @@ export default function JBrowseWeb(
       },
       addConnectionConf(connectionConf) {
         const { type } = connectionConf
-        if (!type) throw new Error(`unknown connection type ${type}`)
+        if (!type) {
+          throw new Error(`unknown connection type ${type}`)
+        }
         const length = self.connections.push(connectionConf)
         return self.connections[length - 1]
       },
@@ -161,6 +173,18 @@ export default function JBrowseWeb(
         }
         self.defaultSession = newDefault
       },
+      addPlugin(plugin) {
+        self.plugins = [...self.plugins, plugin]
+        const rootModel = getRoot(self)
+        rootModel.setPluginsUpdated(true)
+      },
+      removePlugin(pluginName) {
+        self.plugins = self.plugins.filter(
+          plugin => `${plugin.name}Plugin` !== pluginName,
+        )
+        const rootModel = getRoot(self)
+        rootModel.setPluginsUpdated(true)
+      },
     }))
     .views(self => ({
       get assemblyNames() {
@@ -175,8 +199,11 @@ export default function JBrowseWeb(
     postProcessor(snapshot) {
       function removeAttr(obj, attr) {
         for (const prop in obj) {
-          if (prop === attr) delete obj[prop]
-          else if (typeof obj[prop] === 'object') removeAttr(obj[prop])
+          if (prop === attr) {
+            delete obj[prop]
+          } else if (typeof obj[prop] === 'object') {
+            removeAttr(obj[prop])
+          }
         }
       }
       removeAttr(snapshot, 'baseUri')

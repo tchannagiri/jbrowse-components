@@ -1,20 +1,8 @@
-import { PluginConstructor } from '@jbrowse/core/Plugin'
+import { PluginRecord } from '@jbrowse/core/PluginLoader'
 import React, { useEffect, useState } from 'react'
-import {
-  createViewState,
-  createJBrowseTheme,
-  JBrowseLinearGenomeView,
-  loadPlugins,
-  ThemeProvider,
-} from '../src'
+import { createViewState, JBrowseLinearGenomeView, loadPlugins } from '../src'
 import volvoxConfig from '../public/test_data/volvox/config.json'
 import volvoxSession from '../public/volvox-session.json'
-
-export default {
-  title: 'Linear View',
-}
-
-const theme = createJBrowseTheme()
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function addRelativeUris(config: any, baseUri: string) {
@@ -56,13 +44,12 @@ const longReadsSession = {
   ...defaultSession,
   view: volvoxSession.session.views[0],
 }
-
+const aggregateTextSearchAdapters = volvoxConfig.aggregateTextSearchAdapters
 export const OneLinearGenomeView = () => {
   const state = createViewState({
     assembly,
     tracks,
     defaultSession,
-
     // use 1-based coordinates for locstring
     location: 'ctgA:1105..1221',
     onChange: patch => {
@@ -70,11 +57,7 @@ export const OneLinearGenomeView = () => {
       console.log('patch', patch)
     },
   })
-  return (
-    <ThemeProvider theme={theme}>
-      <JBrowseLinearGenomeView viewState={state} />
-    </ThemeProvider>
-  )
+  return <JBrowseLinearGenomeView viewState={state} />
 }
 
 export const OneLinearGenomeViewUsingLocObject = () => {
@@ -90,11 +73,7 @@ export const OneLinearGenomeViewUsingLocObject = () => {
       console.log('patch', patch)
     },
   })
-  return (
-    <ThemeProvider theme={theme}>
-      <JBrowseLinearGenomeView viewState={state} />
-    </ThemeProvider>
-  )
+  return <JBrowseLinearGenomeView viewState={state} />
 }
 
 export const LinearViewWithLongReads = () => {
@@ -109,11 +88,7 @@ export const LinearViewWithLongReads = () => {
     },
   })
 
-  return (
-    <ThemeProvider theme={theme}>
-      <JBrowseLinearGenomeView viewState={state} />
-    </ThemeProvider>
-  )
+  return <JBrowseLinearGenomeView viewState={state} />
 }
 
 export const OneLinearGenomeViewWithOutsideStyling = () => {
@@ -131,9 +106,7 @@ export const OneLinearGenomeViewWithOutsideStyling = () => {
   return (
     <div style={{ textAlign: 'center', fontFamily: 'monospace' }}>
       <h2>Hello world, this is centered but not affecting the internal LGV</h2>
-      <ThemeProvider theme={theme}>
-        <JBrowseLinearGenomeView viewState={state} />
-      </ThemeProvider>
+      <JBrowseLinearGenomeView viewState={state} />
     </div>
   )
 }
@@ -155,10 +128,10 @@ export const TwoLinearGenomeViews = () => {
     location: 'ctgA:5560..30589',
   })
   return (
-    <ThemeProvider theme={theme}>
+    <>
       <JBrowseLinearGenomeView viewState={state1} />
       <JBrowseLinearGenomeView viewState={state2} />
-    </ThemeProvider>
+    </>
   )
 }
 
@@ -168,7 +141,7 @@ export const WithPlugins = () => {
   // const plugins = [UCSCPlugin]
 
   // alternative usage with runtime plugins
-  const [plugins, setPlugins] = useState<PluginConstructor[]>()
+  const [plugins, setPlugins] = useState<PluginRecord[]>()
   useEffect(() => {
     async function getPlugins() {
       const loadedPlugins = await loadPlugins([
@@ -217,7 +190,7 @@ export const WithPlugins = () => {
         },
       },
     },
-    plugins,
+    plugins: plugins.map(p => p.plugin),
     tracks: [
       {
         type: 'FeatureTrack',
@@ -271,9 +244,81 @@ export const WithPlugins = () => {
       },
     },
   })
-  return (
-    <ThemeProvider theme={theme}>
-      <JBrowseLinearGenomeView viewState={state} />
-    </ThemeProvider>
-  )
+  return <JBrowseLinearGenomeView viewState={state} />
 }
+
+export const WithTextSearching = () => {
+  const state = createViewState({
+    assembly,
+    tracks,
+    defaultSession,
+    aggregateTextSearchAdapters,
+    // use 1-based coordinates for locstring
+    location: 'ctgA:1105..1221',
+    onChange: patch => {
+      // eslint-disable-next-line no-console
+      console.log('patch', patch)
+    },
+  })
+  return <JBrowseLinearGenomeView viewState={state} />
+}
+export const CustomTheme = () => {
+  const state = createViewState({
+    assembly,
+    tracks,
+    defaultSession: {
+      ...defaultSession,
+      view: {
+        ...defaultSession.view,
+        bpPerPx: 0.1,
+        offsetPx: 10000,
+        tracks: [
+          {
+            id: 'q3UA86xQA',
+            type: 'ReferenceSequenceTrack',
+            configuration: 'volvox_refseq',
+            displays: [
+              {
+                id: '6JCCxQScPJ',
+                type: 'LinearReferenceSequenceDisplay',
+                configuration: 'volvox_refseq-LinearReferenceSequenceDisplay',
+                height: 210,
+              },
+            ],
+          },
+        ],
+      },
+    },
+    configuration: {
+      theme: {
+        palette: {
+          primary: {
+            main: '#311b92',
+          },
+          secondary: {
+            main: '#0097a7',
+          },
+          tertiary: {
+            main: '#f57c00',
+          },
+          quaternary: {
+            main: '#d50000',
+          },
+          bases: {
+            A: { main: '#98FB98' },
+            C: { main: '#87CEEB' },
+            G: { main: '#DAA520' },
+            T: { main: '#DC143C' },
+          },
+        },
+      },
+    },
+  })
+  return <JBrowseLinearGenomeView viewState={state} />
+}
+
+const JBrowseLinearGenomeViewStories = {
+  title: 'Linear View',
+}
+
+export default JBrowseLinearGenomeViewStories

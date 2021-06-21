@@ -14,6 +14,7 @@ import {
   springAnimate,
   isSessionModelWithWidgets,
 } from '@jbrowse/core/util'
+import BaseResult from '@jbrowse/core/TextSearch/BaseResults'
 import { BlockSet, BaseBlock } from '@jbrowse/core/util/blockTypes'
 import calculateDynamicBlocks from '@jbrowse/core/util/calculateDynamicBlocks'
 import calculateStaticBlocks from '@jbrowse/core/util/calculateStaticBlocks'
@@ -131,6 +132,8 @@ export function stateModelFactory(pluginManager: PluginManager) {
       coarseTotalBp: 0,
       leftOffset: undefined as undefined | BpOffset,
       rightOffset: undefined as undefined | BpOffset,
+      searchResults: undefined as undefined | BaseResult[],
+      searchQuery: undefined as undefined | string,
     }))
     .views(self => ({
       get width(): number {
@@ -168,6 +171,9 @@ export function stateModelFactory(pluginManager: PluginManager) {
       },
       get isSeqDialogDisplayed() {
         return self.leftOffset && self.rightOffset
+      },
+      get isSearchDialogDisplayed() {
+        return self.searchResults !== undefined
       },
       get scaleBarHeight() {
         return SCALE_BAR_HEIGHT + RESIZE_HANDLE_HEIGHT
@@ -271,6 +277,13 @@ export function stateModelFactory(pluginManager: PluginManager) {
         return [
           ...new Set(self.displayedRegions.map(region => region.assemblyName)),
         ]
+      },
+      searchScope(assemblyName: string) {
+        return {
+          assemblyName,
+          includeAggregateIndexes: true,
+          tracks: self.tracks,
+        }
       },
       parentRegion(assemblyName: string, refName: string) {
         return this.displayedParentRegions.find(
@@ -423,6 +436,21 @@ export function stateModelFactory(pluginManager: PluginManager) {
         return self.tracks.find(t => t.configuration.trackId === id)
       },
 
+      rankSearchResults(results: BaseResult[]) {
+        // order of rank
+        const openTrackIds = self.tracks.map(
+          track => track.configuration.trackId,
+        )
+        results.forEach(result => {
+          if (openTrackIds !== []) {
+            if (openTrackIds.includes(result.trackId)) {
+              result.updateScore(result.getScore() + 1)
+            }
+          }
+        })
+        return results
+      },
+
       // modifies view menu action onClick to apply to all tracks of same type
       rewriteOnClicks(trackType: string, viewMenuActions: MenuItem[]) {
         viewMenuActions.forEach((action: MenuItem) => {
@@ -515,6 +543,14 @@ export function stateModelFactory(pluginManager: PluginManager) {
         self.rightOffset = right
       },
 
+      setSearchResults(
+        results: BaseResult[] | undefined,
+        query: string | undefined,
+      ) {
+        self.searchResults = results
+        self.searchQuery = query
+      },
+
       setNewView(bpPerPx: number, offsetPx: number) {
         this.zoomTo(bpPerPx)
         this.scrollTo(offsetPx)
@@ -530,7 +566,11 @@ export function stateModelFactory(pluginManager: PluginManager) {
         this.scrollTo(self.totalBp / self.bpPerPx - self.offsetPx - self.width)
       },
 
-      showTrack(trackId: string, initialSnapshot = {}) {
+      showTrack(
+        trackId: string,
+        initialSnapshot = {},
+        displayInitialSnapshot = {},
+      ) {
         const trackConfigSchema = pluginManager.pluggableConfigSchemaType(
           'track',
         )
@@ -559,7 +599,13 @@ export function stateModelFactory(pluginManager: PluginManager) {
           ...initialSnapshot,
           type: configuration.type,
           configuration,
-          displays: [{ type: displayConf.type, configuration: displayConf }],
+          displays: [
+            {
+              type: displayConf.type,
+              configuration: displayConf,
+              ...displayInitialSnapshot,
+            },
+          ],
         })
         self.tracks.push(track)
         return track
@@ -605,7 +651,9 @@ export function stateModelFactory(pluginManager: PluginManager) {
         const parent = getContainingView(self)
         if (parent) {
           // I am embedded in a some other view
-          if (isViewContainer(parent)) parent.removeView(self)
+          if (isViewContainer(parent)) {
+            parent.removeView(self)
+          }
         } else {
           // I am part of a session
           getSession(self).removeView(self)
@@ -942,7 +990,9 @@ export function stateModelFactory(pluginManager: PluginManager) {
        * @param rightPx- `object as {start, end, index, offset}`, offset = end of user drag
        */
       zoomToDisplayedRegions(leftPx: BpOffset, rightPx: BpOffset) {
-        if (leftPx === undefined || rightPx === undefined) return
+        if (leftPx === undefined || rightPx === undefined) {
+          return
+        }
 
         const singleRefSeq =
           leftPx.refName === rightPx.refName && leftPx.index === rightPx.index

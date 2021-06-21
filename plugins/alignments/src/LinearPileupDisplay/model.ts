@@ -14,14 +14,13 @@ import {
   getContainingView,
 } from '@jbrowse/core/util'
 
-import { BlockSet } from '@jbrowse/core/util/blockTypes'
 import VisibilityIcon from '@material-ui/icons/Visibility'
 import { ContentCopy as ContentCopyIcon } from '@jbrowse/core/ui/Icons'
 import {
   LinearGenomeViewModel,
   BaseLinearDisplay,
 } from '@jbrowse/plugin-linear-genome-view'
-import { cast, types, addDisposer, Instance } from 'mobx-state-tree'
+import { cast, types, addDisposer, getEnv, Instance } from 'mobx-state-tree'
 import copy from 'copy-to-clipboard'
 import PluginManager from '@jbrowse/core/PluginManager'
 import { Feature } from '@jbrowse/core/util/simpleFeature'
@@ -36,11 +35,14 @@ import SerializableFilterChain from '@jbrowse/core/pluggableElementTypes/rendere
 import { LinearPileupDisplayConfigModel } from './configSchema'
 import LinearPileupDisplayBlurb from './components/LinearPileupDisplayBlurb'
 
+import { getUniqueTagValues, getUniqueModificationValues } from '../shared'
+
 const ColorByTagDlg = lazy(() => import('./components/ColorByTag'))
 const FilterByTagDlg = lazy(() => import('./components/FilterByTag'))
 const SortByTagDlg = lazy(() => import('./components/SortByTag'))
 const SetFeatureHeightDlg = lazy(() => import('./components/SetFeatureHeight'))
 const SetMaxHeightDlg = lazy(() => import('./components/SetMaxHeight'))
+const ModificationsDlg = lazy(() => import('./components/ColorByModifications'))
 
 // using a map because it preserves order
 const rendererTypes = new Map([
@@ -64,6 +66,7 @@ const stateModelFactory = (
         showSoftClipping: false,
         featureHeight: types.maybe(types.number),
         noSpacing: types.maybe(types.boolean),
+        fadeLikelihood: types.maybe(types.boolean),
         trackMaxHeight: types.maybe(types.number),
         mismatchAlpha: types.maybe(types.boolean),
         sortedBy: types.maybe(
@@ -79,6 +82,7 @@ const stateModelFactory = (
           types.model({
             type: types.string,
             tag: types.maybe(types.string),
+            extra: types.frozen(),
           }),
         ),
         filterBy: types.optional(
@@ -96,6 +100,7 @@ const stateModelFactory = (
     )
     .volatile(() => ({
       colorTagMap: observable.map<string, string>({}),
+      modificationTagMap: observable.map<string, string>({}),
       ready: false,
       currBpPerPx: 0,
     }))
@@ -121,31 +126,18 @@ const stateModelFactory = (
         self.colorBy = cast(colorScheme)
         self.ready = false
       },
-      async getUniqueTagValues(
-        colorScheme: { type: string; tag?: string },
-        blocks: BlockSet,
-        opts?: {
-          headers?: Record<string, string>
-          signal?: AbortSignal
-          filters?: string[]
-        },
-      ) {
-        const { rpcManager } = getSession(self)
-        const { adapterConfig } = self
-        const sessionId = getRpcSessionId(self)
-        const values = await rpcManager.call(
-          getRpcSessionId(self),
-          'PileupGetGlobalValueForTag',
-          {
-            adapterConfig,
-            tag: colorScheme.tag,
-            sessionId,
-            regions: blocks.contentBlocks,
-            ...opts,
-          },
-        )
-        return values as string[]
+
+      updateModificationColorMap(uniqueModifications: string[]) {
+        const colorPalette = ['red', 'blue', 'green', 'orange', 'purple']
+        uniqueModifications.forEach(value => {
+          if (!self.modificationTagMap.has(value)) {
+            const totalKeys = [...self.modificationTagMap.keys()].length
+            const newColor = colorPalette[totalKeys]
+            self.modificationTagMap.set(value, newColor)
+          }
+        })
       },
+
       updateColorTagMap(uniqueTag: string[]) {
         // pale color scheme https://cran.r-project.org/web/packages/khroma/vignettes/tol.html e.g. "tol_light"
         const colorPalette = [
@@ -184,11 +176,22 @@ const stateModelFactory = (
                 // continually generate the vc pairing, set and rerender if any
                 // new values seen
                 if (colorBy?.tag) {
-                  const uniqueTagSet = await self.getUniqueTagValues(
+                  const uniqueTagSet = await getUniqueTagValues(
+                    self,
                     colorBy,
                     view.staticBlocks,
                   )
                   self.updateColorTagMap(uniqueTagSet)
+                }
+
+                if (colorBy?.type === 'modifications') {
+                  const uniqueModificationsSet = await getUniqueModificationValues(
+                    self,
+                    getConf(self.parentTrack, ['adapter']),
+                    colorBy,
+                    view.staticBlocks,
+                  )
+                  self.updateModificationColorMap(uniqueModificationsSet)
                 }
 
                 if (sortedBy) {
@@ -316,13 +319,16 @@ const stateModelFactory = (
       get rendererConfig() {
         const configBlob =
           getConf(self, ['renderers', self.rendererTypeName]) || {}
-        return self.rendererType.configSchema.create({
-          ...configBlob,
-          height: self.featureHeight,
-          noSpacing: self.noSpacing,
-          maxHeight: this.maxHeight,
-          mismatchAlpha: self.mismatchAlpha,
-        })
+        return self.rendererType.configSchema.create(
+          {
+            ...configBlob,
+            height: self.featureHeight,
+            noSpacing: self.noSpacing,
+            maxHeight: this.maxHeight,
+            mismatchAlpha: self.mismatchAlpha,
+          },
+          getEnv(self),
+        )
       },
       get featureHeightSetting() {
         return (
@@ -419,6 +425,9 @@ const stateModelFactory = (
             sortedBy: self.sortedBy,
             colorBy: self.colorBy,
             colorTagMap: JSON.parse(JSON.stringify(self.colorTagMap)),
+            modificationTagMap: JSON.parse(
+              JSON.stringify(self.modificationTagMap),
+            ),
             filters: this.filters,
             showSoftClip: self.showSoftClipping,
             config: self.rendererConfig,
@@ -499,6 +508,14 @@ const stateModelFactory = (
                   label: 'Per-base quality',
                   onClick: () => {
                     self.setColorScheme({ type: 'perBaseQuality' })
+                  },
+                },
+                {
+                  label: 'Modifications or methylation',
+                  onClick: () => {
+                    getSession(self).setDialogComponent(ModificationsDlg, {
+                      model: self,
+                    })
                   },
                 },
                 {

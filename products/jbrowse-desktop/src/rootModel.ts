@@ -6,6 +6,7 @@ import RpcManager from '@jbrowse/core/rpc/RpcManager'
 import { MenuItem } from '@jbrowse/core/ui'
 import AddIcon from '@material-ui/icons/Add'
 import SettingsIcon from '@material-ui/icons/Settings'
+import AppsIcon from '@material-ui/icons/Apps'
 import {
   cast,
   getParent,
@@ -13,7 +14,6 @@ import {
   SnapshotIn,
   types,
 } from 'mobx-state-tree'
-import { readConfObject } from '@jbrowse/core/configuration'
 import JBrowseDesktop from './jbrowseModel'
 import sessionModelFactory from './sessionModelFactory'
 
@@ -53,11 +53,14 @@ export default function RootModel(pluginManager: PluginManager) {
       version: types.maybe(types.string),
       isAssemblyEditing: false,
     })
+    .volatile(() => ({
+      pluginsUpdated: false,
+    }))
     .actions(self => ({
       setSavedSessionNames(sessionNames: string[]) {
         self.savedSessionNames = cast(sessionNames)
       },
-      setSession(sessionSnapshot: SnapshotIn<typeof Session>) {
+      setSession(sessionSnapshot?: SnapshotIn<typeof Session>) {
         self.session = cast(sessionSnapshot)
       },
       setDefaultSession() {
@@ -70,6 +73,9 @@ export default function RootModel(pluginManager: PluginManager) {
       },
       setAssemblyEditing(flag: boolean) {
         self.isAssemblyEditing = flag
+      },
+      setPluginsUpdated(flag: boolean) {
+        self.pluginsUpdated = flag
       },
       renameCurrentSession(sessionName: string) {
         if (self.session) {
@@ -110,6 +116,13 @@ export default function RootModel(pluginManager: PluginManager) {
                 session.setDefaultSession()
               },
             },
+            {
+              label: 'Return to splash screen',
+              icon: AppsIcon,
+              onClick: () => {
+                self.setSession(undefined)
+              },
+            },
           ],
         },
         {
@@ -129,7 +142,6 @@ export default function RootModel(pluginManager: PluginManager) {
       ] as Menu[],
       rpcManager: new RpcManager(
         pluginManager,
-        readConfObject(self.jbrowse.configuration, 'plugins'),
         self.jbrowse.configuration.rpc,
         {
           ElectronRpcDriver: { workerCreationChannel: 'createWindowWorker' },
